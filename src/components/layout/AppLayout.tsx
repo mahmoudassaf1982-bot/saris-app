@@ -1,9 +1,12 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import TopBar from "./TopBar";
 import BottomNav from "./BottomNav";
 import SmartCoachFloating from "@/components/SmartCoach/SmartCoachFloating";
 
 const AppLayout = () => {
+  const { pathname } = useLocation();
+  const isSession = pathname.includes("/adaptive-training/") || pathname.includes("/exam-session/");
+
   return (
     <div className="min-h-screen bg-saris-bg">
       <div className="max-w-[430px] mx-auto relative">
@@ -12,7 +15,7 @@ const AppLayout = () => {
           <Outlet />
         </main>
         <BottomNav />
-        <SmartCoachFloating />
+        {!isSession && <SmartCoachFloating />}
       </div>
     </div>
   );
