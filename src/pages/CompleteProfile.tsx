@@ -1,88 +1,111 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { UserCircle, Phone } from "lucide-react";
+import { mockCountries } from "@/data/mock-data";
 
-const exams = [
-  { id: "exam_1", name: "اختبار القدرات الأكاديمية", desc: "اختبار شامل للقدرات الرياضية والتحليلية", questions: 45, duration: "57 دقيقة" },
-  { id: "exam_2", name: "اختبار القدرات العامة", desc: "اختبار القدرات العامة المعتمد", questions: 45, duration: "60 دقيقة" },
-];
+const countryCodes: Record<string, { code: string; flag: string }> = {
+  kw: { code: "+965", flag: "🇰🇼" },
+  sa: { code: "+966", flag: "🇸🇦" },
+  tr: { code: "+90", flag: "🇹🇷" },
+  qa: { code: "+974", flag: "🇶🇦" },
+};
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
-  const [selectedExam, setSelectedExam] = useState("exam_1");
+  const [firstName, setFirstName] = useState("أحمد");
+  const [lastName, setLastName] = useState("محمد");
+  const [countryId, setCountryId] = useState("kw");
+  const [phone, setPhone] = useState("");
+
+  const cc = countryCodes[countryId] || countryCodes.kw;
+  const canSubmit = firstName.trim() && lastName.trim() && countryId && phone.trim();
 
   return (
-    <div className="min-h-screen bg-saris-bg flex flex-col items-center px-4 pt-12">
-      <div className="max-w-[430px] w-full">
-        {/* Progress */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className={`w-2.5 h-2.5 rounded-full ${i <= 1 ? "bg-saris-orange" : "bg-saris-border"}`} />
-          ))}
+    <div className="min-h-screen bg-saris-bg flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-md w-full bg-saris-bg-card rounded-2xl p-6 shadow-card"
+      >
+        <div className="w-14 h-14 rounded-full bg-saris-navy/10 flex items-center justify-center mx-auto mb-4">
+          <UserCircle className="w-7 h-7 text-saris-navy" />
         </div>
 
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="font-tajawal font-bold text-2xl text-saris-text text-center mb-2">أكمل ملفك الشخصي</h1>
-          <p className="font-tajawal text-sm text-saris-text-2 text-center mb-8">معلوماتك تساعدنا نخصص تجربتك</p>
+        <h1 className="font-tajawal font-bold text-xl text-saris-text text-center mb-1">أكمل بياناتك</h1>
+        <p className="font-tajawal text-sm text-saris-text-2 text-center mb-6">نحتاج بعض المعلومات لإكمال حسابك</p>
 
-          <form
-            onSubmit={(e) => { e.preventDefault(); navigate("/welcome"); }}
-            className="space-y-4"
+        <form
+          onSubmit={(e) => { e.preventDefault(); navigate("/welcome"); }}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="font-tajawal text-sm text-saris-text-2 block mb-1">الاسم الأول</label>
+              <input
+                className="w-full bg-saris-bg rounded-lg px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none text-right"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className="font-tajawal text-sm text-saris-text-2 block mb-1">اسم العائلة</label>
+              <input
+                className="w-full bg-saris-bg rounded-lg px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none text-right"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="font-tajawal text-sm text-saris-text-2 block mb-1">الدولة</label>
+            <select
+              value={countryId}
+              onChange={(e) => setCountryId(e.target.value)}
+              className="w-full bg-saris-bg rounded-lg px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none text-right"
+            >
+              {mockCountries.map((c) => (
+                <option key={c.id} value={c.id}>{c.flag} {c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="font-tajawal text-sm text-saris-text-2 block mb-1">رقم الهاتف</label>
+            <div className="flex gap-2">
+              <div className="bg-saris-bg rounded-lg px-3 py-3 font-inter text-sm border border-saris-border text-saris-text-2 min-w-[80px] text-center flex items-center gap-1 justify-center">
+                <span>{cc.flag}</span>
+                <span>{cc.code}</span>
+              </div>
+              <input
+                className="flex-1 bg-saris-bg rounded-lg px-4 py-3 font-mono text-sm border border-saris-border focus:border-saris-navy focus:outline-none"
+                dir="ltr"
+                style={{ textAlign: "left" }}
+                inputMode="tel"
+                maxLength={10}
+                placeholder="5XXXXXXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+              />
+            </div>
+            <p className="font-tajawal text-[11px] text-saris-text-3 mt-1 flex items-center gap-1">
+              <Phone className="w-3 h-3" />
+              سيُستخدم لتأكيد العمليات المالية
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-xl py-3.5 disabled:opacity-50 shadow-card"
           >
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="font-tajawal text-sm text-saris-text-2 block mb-1">الاسم الأول</label>
-                <input className="w-full bg-saris-bg-card rounded-saris-md px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none" defaultValue="أحمد" />
-              </div>
-              <div className="flex-1">
-                <label className="font-tajawal text-sm text-saris-text-2 block mb-1">اسم العائلة</label>
-                <input className="w-full bg-saris-bg-card rounded-saris-md px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none" defaultValue="محمد" />
-              </div>
-            </div>
-
-            <div>
-              <label className="font-tajawal text-sm text-saris-text-2 block mb-1">رقم الهاتف</label>
-              <div className="flex gap-2">
-                <div className="bg-saris-bg-card rounded-saris-md px-3 py-3 font-inter text-sm border border-saris-border text-saris-text-2 min-w-[70px] text-center">+965</div>
-                <input className="flex-1 bg-saris-bg-card rounded-saris-md px-4 py-3 font-inter text-sm border border-saris-border focus:border-saris-navy focus:outline-none ltr" dir="ltr" placeholder="5XXXXXXX" />
-              </div>
-            </div>
-
-            <div>
-              <label className="font-tajawal text-sm text-saris-text-2 block mb-2">الاختبار المستهدف</label>
-              <div className="space-y-2.5">
-                {exams.map((exam) => {
-                  const isActive = selectedExam === exam.id;
-                  return (
-                    <button
-                      key={exam.id}
-                      type="button"
-                      onClick={() => setSelectedExam(exam.id)}
-                      className={`w-full text-right bg-saris-bg-card rounded-saris-lg p-4 border transition-all ${
-                        isActive ? "border-saris-orange bg-saris-orange/5" : "border-saris-border"
-                      }`}
-                    >
-                      <p className="font-tajawal font-bold text-sm text-saris-text">{exam.name}</p>
-                      <p className="font-tajawal text-xs text-saris-text-2 mt-1">{exam.desc}</p>
-                      <div className="flex gap-3 mt-2">
-                        <span className="font-tajawal text-xs text-saris-text-3">📝 {exam.questions} سؤال</span>
-                        <span className="font-tajawal text-xs text-saris-text-3">⏱ {exam.duration}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <button type="submit" className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-saris-lg h-12 shadow-card">
-              التالي
-            </button>
-            <button type="button" onClick={() => navigate("/choose-country")} className="w-full font-tajawal text-sm text-saris-text-2 py-2">
-              الرجوع
-            </button>
-          </form>
-        </motion.div>
-      </div>
+            حفظ ومتابعة
+          </button>
+        </form>
+      </motion.div>
     </div>
   );
 };

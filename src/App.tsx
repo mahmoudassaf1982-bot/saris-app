@@ -1,10 +1,9 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import ChooseCountry from "./pages/ChooseCountry";
 import CompleteProfile from "./pages/CompleteProfile";
@@ -19,7 +18,6 @@ import Referral from "./pages/Referral";
 import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
 import {
-  AdminPage,
   AdaptiveTrainingPage,
   ExamSessionPage,
 } from "./pages/StubPages";
@@ -33,8 +31,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Landing />} />
+          {/* Redirect root to auth */}
+          <Route path="/" element={<Navigate to="/auth" replace />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/auth/login" element={<Auth />} />
+          <Route path="/auth/register" element={<Auth />} />
           <Route path="/choose-country" element={<ChooseCountry />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
           <Route path="/welcome" element={<Welcome />} />
@@ -48,7 +49,6 @@ const App = () => (
             <Route path="topup" element={<TopUp />} />
             <Route path="history" element={<History />} />
             <Route path="referral" element={<Referral />} />
-            <Route path="admin" element={<AdminPage />} />
             <Route path="adaptive-training/:sessionId" element={<AdaptiveTrainingPage />} />
             <Route path="exam-session/:sessionId" element={<ExamSessionPage />} />
           </Route>
