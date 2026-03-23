@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import TopBar from "./TopBar";
 import BottomNav from "./BottomNav";
+import SmartCoachFloating from "@/components/SmartCoach/SmartCoachFloating";
 
 const AppLayout = () => {
   return (
@@ -11,6 +12,7 @@ const AppLayout = () => {
           <Outlet />
         </main>
         <BottomNav />
+        <SmartCoachFloating />
       </div>
     </div>
   );
