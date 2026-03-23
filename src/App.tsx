@@ -10,15 +10,15 @@ import ChooseCountry from "./pages/ChooseCountry";
 import CompleteProfile from "./pages/CompleteProfile";
 import Welcome from "./pages/Welcome";
 import Dashboard from "./pages/Dashboard";
+import Exams from "./pages/Exams";
+import Performance from "./pages/Performance";
+import Wallet from "./pages/Wallet";
+import TopUp from "./pages/TopUp";
+import History from "./pages/History";
+import Referral from "./pages/Referral";
 import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
 import {
-  ExamsPage,
-  PerformancePage,
-  WalletPage,
-  TopupPage,
-  HistoryPage,
-  ReferralPage,
   AdminPage,
   AdaptiveTrainingPage,
   ExamSessionPage,
@@ -42,12 +42,12 @@ const App = () => (
           {/* Protected app routes */}
           <Route path="/app" element={<AppLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="exams" element={<ExamsPage />} />
-            <Route path="performance" element={<PerformancePage />} />
-            <Route path="wallet" element={<WalletPage />} />
-            <Route path="topup" element={<TopupPage />} />
-            <Route path="history" element={<HistoryPage />} />
-            <Route path="referral" element={<ReferralPage />} />
+            <Route path="exams" element={<Exams />} />
+            <Route path="performance" element={<Performance />} />
+            <Route path="wallet" element={<Wallet />} />
+            <Route path="topup" element={<TopUp />} />
+            <Route path="history" element={<History />} />
+            <Route path="referral" element={<Referral />} />
             <Route path="admin" element={<AdminPage />} />
             <Route path="adaptive-training/:sessionId" element={<AdaptiveTrainingPage />} />
             <Route path="exam-session/:sessionId" element={<ExamSessionPage />} />

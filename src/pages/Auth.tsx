@@ -1,110 +1,181 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, User } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong">("weak");
+
+  const handlePasswordChange = (val: string) => {
+    if (val.length >= 10) setPasswordStrength("strong");
+    else if (val.length >= 6) setPasswordStrength("medium");
+    else setPasswordStrength("weak");
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/choose-country");
+    if (isLogin) {
+      navigate("/app");
+    } else {
+      navigate("/choose-country");
+    }
   };
 
+  const strengthColors = { weak: "bg-saris-danger", medium: "bg-saris-warning", strong: "bg-saris-success" };
+  const strengthLabels = { weak: "ضعيفة", medium: "متوسطة", strong: "قوية" };
+
   return (
-    <div className="min-h-screen bg-saris-bg flex items-center justify-center px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-[430px] w-full bg-saris-bg-card rounded-saris-lg p-6 shadow-card border border-saris-border"
-      >
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-saris-full gradient-primary flex items-center justify-center mx-auto mb-3">
-            <span className="text-saris-orange font-tajawal font-bold text-xl">S</span>
+    <div className="min-h-screen flex flex-col">
+      {/* Gradient top half */}
+      <div className="gradient-primary h-[35vh] flex items-center justify-center">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
+          <div className="w-16 h-16 rounded-saris-full bg-white/10 flex items-center justify-center mx-auto mb-3">
+            <span className="text-saris-orange font-tajawal font-bold text-2xl">S</span>
           </div>
-          <h1 className="font-tajawal font-bold text-xl text-saris-text">
-            {isLogin ? "تسجيل الدخول" : "إنشاء حساب جديد"}
-          </h1>
-        </div>
+          <h2 className="font-tajawal font-bold text-white text-lg">سارس للاختبارات</h2>
+        </motion.div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
+      {/* Card */}
+      <div className="flex-1 bg-saris-bg -mt-8 rounded-t-[24px] relative">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-[430px] mx-auto px-5 pt-6 pb-8"
+        >
+          {/* Tab toggle */}
+          <div className="flex bg-saris-bg-soft rounded-saris-md p-1 mb-6">
+            <button
+              onClick={() => setIsLogin(true)}
+              className={`flex-1 py-2.5 rounded-saris-sm font-tajawal font-bold text-sm transition-all ${isLogin ? "bg-saris-bg-card text-saris-navy shadow-card" : "text-saris-text-3"}`}
+            >
+              تسجيل الدخول
+            </button>
+            <button
+              onClick={() => setIsLogin(false)}
+              className={`flex-1 py-2.5 rounded-saris-sm font-tajawal font-bold text-sm transition-all ${!isLogin ? "bg-saris-bg-card text-saris-navy shadow-card" : "text-saris-text-3"}`}
+            >
+              إنشاء حساب
+            </button>
+          </div>
+
+          <div className="mb-5">
+            <h1 className="font-tajawal font-bold text-[22px] text-saris-text">
+              {isLogin ? "تسجيل الدخول" : "إنشاء حساب جديد"}
+            </h1>
+            <p className="font-tajawal text-[13px] text-saris-text-2 mt-1">
+              {isLogin ? "مرحبًا بعودتك إلى سارس" : "ابدأ رحلتك مع سارس"}
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="font-tajawal text-sm text-saris-text-2 block mb-1">الاسم الأول</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      className="w-full bg-saris-bg-card rounded-saris-md px-4 py-3 pr-10 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none"
+                      placeholder="أحمد"
+                    />
+                    <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-saris-text-3" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <label className="font-tajawal text-sm text-saris-text-2 block mb-1">اسم العائلة</label>
+                  <input
+                    type="text"
+                    className="w-full bg-saris-bg-card rounded-saris-md px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none"
+                    placeholder="محمد"
+                  />
+                </div>
+              </div>
+            )}
+
             <div>
-              <label className="font-tajawal text-sm text-saris-text-2 block mb-1">الاسم الكامل</label>
-              <input
-                type="text"
-                className="w-full bg-saris-bg rounded-saris-md px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none"
-                placeholder="أحمد محمد"
-              />
+              <label className="font-tajawal text-sm text-saris-text-2 block mb-1">البريد الإلكتروني</label>
+              <div className="relative">
+                <input
+                  type="email"
+                  className="w-full bg-saris-bg-card rounded-saris-md px-4 py-3 pr-10 font-inter text-sm border border-saris-border focus:border-saris-navy focus:outline-none ltr"
+                  placeholder="ahmed@example.com"
+                  dir="ltr"
+                />
+                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-saris-text-3" />
+              </div>
             </div>
-          )}
-          <div>
-            <label className="font-tajawal text-sm text-saris-text-2 block mb-1">البريد الإلكتروني</label>
-            <div className="relative">
-              <input
-                type="email"
-                className="w-full bg-saris-bg rounded-saris-md px-4 py-3 pr-10 font-inter text-sm border border-saris-border focus:border-saris-navy focus:outline-none ltr"
-                placeholder="ahmed@example.com"
-                dir="ltr"
-              />
-              <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-saris-text-3" />
+
+            <div>
+              <label className="font-tajawal text-sm text-saris-text-2 block mb-1">كلمة المرور</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  className="w-full bg-saris-bg-card rounded-saris-md px-4 py-3 pr-10 font-inter text-sm border border-saris-border focus:border-saris-navy focus:outline-none ltr"
+                  placeholder="••••••••"
+                  dir="ltr"
+                  onChange={(e) => !isLogin && handlePasswordChange(e.target.value)}
+                />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {showPassword ? <EyeOff className="w-4 h-4 text-saris-text-3" /> : <Eye className="w-4 h-4 text-saris-text-3" />}
+                </button>
+              </div>
+              {!isLogin && (
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="flex-1 flex gap-1">
+                    <div className={`h-1 flex-1 rounded-full ${passwordStrength !== "weak" ? strengthColors[passwordStrength] : strengthColors.weak}`} />
+                    <div className={`h-1 flex-1 rounded-full ${passwordStrength === "medium" || passwordStrength === "strong" ? strengthColors[passwordStrength] : "bg-saris-border"}`} />
+                    <div className={`h-1 flex-1 rounded-full ${passwordStrength === "strong" ? strengthColors.strong : "bg-saris-border"}`} />
+                  </div>
+                  <span className="font-tajawal text-xs text-saris-text-3">{strengthLabels[passwordStrength]}</span>
+                </div>
+              )}
             </div>
+
+            <button
+              type="submit"
+              className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-saris-lg h-12 shadow-card hover:shadow-card-hover transition-shadow"
+            >
+              {isLogin ? "تسجيل الدخول" : "إنشاء الحساب"}
+            </button>
+          </form>
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="flex-1 h-px bg-saris-border" />
+            <span className="font-tajawal text-xs text-saris-text-3">أو</span>
+            <div className="flex-1 h-px bg-saris-border" />
           </div>
-          <div>
-            <label className="font-tajawal text-sm text-saris-text-2 block mb-1">كلمة المرور</label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                className="w-full bg-saris-bg rounded-saris-md px-4 py-3 pr-10 font-inter text-sm border border-saris-border focus:border-saris-navy focus:outline-none ltr"
-                placeholder="••••••••"
-                dir="ltr"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4 text-saris-text-3" />
-                ) : (
-                  <Eye className="w-4 h-4 text-saris-text-3" />
-                )}
-              </button>
-            </div>
+
+          <div className="space-y-2.5">
+            <button
+              onClick={() => isLogin ? navigate("/app") : navigate("/choose-country")}
+              className="w-full bg-saris-bg-card rounded-saris-md h-12 font-tajawal text-sm text-saris-text border border-saris-border flex items-center justify-center gap-2"
+              aria-label="تسجيل الدخول بحساب Google"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              {isLogin ? "تسجيل الدخول بحساب Google" : "التسجيل بحساب Google"}
+            </button>
+            <button
+              onClick={() => isLogin ? navigate("/app") : navigate("/choose-country")}
+              className="w-full bg-saris-text rounded-saris-md h-12 font-tajawal text-sm text-white flex items-center justify-center gap-2"
+              aria-label="تسجيل الدخول بحساب Apple"
+            >
+              <svg className="w-5 h-5" fill="white" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+              {isLogin ? "تسجيل الدخول بحساب Apple" : "التسجيل بحساب Apple"}
+            </button>
           </div>
 
-          <button
-            type="submit"
-            className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-saris-md py-3"
-          >
-            {isLogin ? "تسجيل الدخول" : "إنشاء حساب"}
-          </button>
-        </form>
-
-        <div className="mt-4 flex items-center gap-3">
-          <div className="flex-1 h-px bg-saris-border" />
-          <span className="font-tajawal text-xs text-saris-text-3">أو</span>
-          <div className="flex-1 h-px bg-saris-border" />
-        </div>
-
-        <div className="mt-4 space-y-2">
-          <button className="w-full bg-saris-bg rounded-saris-md py-3 font-tajawal text-sm text-saris-text border border-saris-border">
-            المتابعة مع Google
-          </button>
-          <button className="w-full bg-saris-bg rounded-saris-md py-3 font-tajawal text-sm text-saris-text border border-saris-border">
-            المتابعة مع Apple
-          </button>
-        </div>
-
-        <p className="text-center mt-4 font-tajawal text-sm text-saris-text-2">
-          {isLogin ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{" "}
-          <button onClick={() => setIsLogin(!isLogin)} className="text-saris-navy font-bold">
-            {isLogin ? "إنشاء حساب" : "تسجيل الدخول"}
-          </button>
-        </p>
-      </motion.div>
+          <p className="text-center mt-5 font-tajawal text-sm text-saris-text-2">
+            {isLogin ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{" "}
+            <button onClick={() => setIsLogin(!isLogin)} className="text-saris-navy font-bold">
+              {isLogin ? "سجّل الآن" : "سجّل دخولك"}
+            </button>
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 };
