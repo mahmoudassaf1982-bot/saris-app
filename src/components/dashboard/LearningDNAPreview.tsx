@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Fingerprint, TrendingUp, ArrowLeft } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { mockDNA } from "@/data/mock-data";
+import SarisCoachAvatar from "@/components/SmartCoach/SarisCoachAvatar";
 
 const LearningDNAPreview = () => {
   const navigate = useNavigate();
@@ -23,9 +24,7 @@ const LearningDNAPreview = () => {
         </button>
       </div>
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-saris-full gradient-primary flex items-center justify-center">
-          <Fingerprint className="w-6 h-6 text-saris-orange" />
-        </div>
+        <SarisCoachAvatar state="idle" size={64} className="flex-shrink-0" />
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <span className="font-tajawal font-bold text-base text-saris-text">{mockDNA.typeAr}</span>
