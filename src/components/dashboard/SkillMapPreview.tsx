@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { mockSkills } from "@/data/mock-data";
+import SarisCoachAvatar from "@/components/SmartCoach/SarisCoachAvatar";
 
 const SkillMapPreview = () => {
   const navigate = useNavigate();
@@ -27,21 +28,24 @@ const SkillMapPreview = () => {
           عرض الكل ←
         </button>
       </div>
-      <div className="space-y-3">
-        {mockSkills.map((skill, i) => (
-          <div key={i}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="font-tajawal text-xs text-saris-text-2">{skill.name}</span>
-              <span className="font-inter text-xs font-bold text-saris-text">{skill.score}%</span>
+      <div className="flex gap-3">
+        <SarisCoachAvatar state="pointing" size={80} className="flex-shrink-0" />
+        <div className="flex-1 space-y-3">
+          {mockSkills.map((skill, i) => (
+            <div key={i}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-tajawal text-xs text-saris-text-2">{skill.name}</span>
+                <span className="font-inter text-xs font-bold text-saris-text">{skill.score}%</span>
+              </div>
+              <div className="w-full bg-saris-bg rounded-saris-full h-2">
+                <div
+                  className={`h-2 rounded-saris-full transition-all duration-500 ${getBarColor(skill.score)}`}
+                  style={{ width: `${skill.score}%` }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-saris-bg rounded-saris-full h-2">
-              <div
-                className={`h-2 rounded-saris-full transition-all duration-500 ${getBarColor(skill.score)}`}
-                style={{ width: `${skill.score}%` }}
-              />
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </motion.div>
   );

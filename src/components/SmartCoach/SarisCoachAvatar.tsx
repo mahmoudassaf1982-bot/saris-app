@@ -1,10 +1,4 @@
 import { motion } from 'framer-motion';
-import coachPointing from '@/assets/saris-coach-fullbody.png';
-import coachIdle from '@/assets/saris-coach-idle.png';
-import coachSpeaking from '@/assets/saris-coach-speaking.png';
-import coachCelebrating from '@/assets/saris-coach-celebrating.png';
-import coachThinking from '@/assets/saris-coach-thinking.png';
-import coachWaving from '@/assets/saris-coach-waving.png';
 
 export type CoachAnimState = 'idle' | 'walking' | 'speaking' | 'pointing' | 'celebrating' | 'guiding' | 'thinking' | 'waving';
 
@@ -15,14 +9,14 @@ interface SarisCoachAvatarProps {
 }
 
 const stateToImage: Record<CoachAnimState, string> = {
-  idle: coachIdle,
-  walking: coachWaving,
-  speaking: coachSpeaking,
-  pointing: coachPointing,
-  celebrating: coachCelebrating,
-  guiding: coachSpeaking,
-  thinking: coachThinking,
-  waving: coachWaving,
+  idle: '/coach/saris-coach-idle.png',
+  walking: '/coach/saris-coach-waving.png',
+  speaking: '/coach/saris-coach-speaking.png',
+  pointing: '/coach/saris-coach-fullbody.png',
+  celebrating: '/coach/saris-coach-celebrating.png',
+  guiding: '/coach/saris-coach-speaking.png',
+  thinking: '/coach/saris-coach-thinking.png',
+  waving: '/coach/saris-coach-waving.png',
 };
 
 export default function SarisCoachAvatar({ state, size = 120, className = '' }: SarisCoachAvatarProps) {
