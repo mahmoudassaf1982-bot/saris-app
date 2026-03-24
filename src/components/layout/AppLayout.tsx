@@ -6,6 +6,11 @@ import SmartCoachFloating from "@/components/SmartCoach/SmartCoachFloating";
 const AppLayout = () => {
   const { pathname } = useLocation();
   const isSession = pathname.includes("/adaptive-training/") || pathname.includes("/exam-session/");
+  const isTopUp = pathname.includes("/topup");
+
+  if (isSession) {
+    return <Outlet />;
+  }
 
   return (
     <div className="min-h-screen bg-saris-bg">
@@ -15,7 +20,7 @@ const AppLayout = () => {
           <Outlet />
         </main>
         <BottomNav />
-        {!isSession && <SmartCoachFloating />}
+        {!isTopUp && <SmartCoachFloating />}
       </div>
     </div>
   );
