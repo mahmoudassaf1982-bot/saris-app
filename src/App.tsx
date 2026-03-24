@@ -17,10 +17,8 @@ import History from "./pages/History";
 import Referral from "./pages/Referral";
 import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
-import {
-  AdaptiveTrainingPage,
-  ExamSessionPage,
-} from "./pages/StubPages";
+import AdaptiveTraining from "./pages/AdaptiveTraining";
+import { ExamSessionPage } from "./pages/StubPages";
 
 const queryClient = new QueryClient();
 
@@ -49,7 +47,7 @@ const App = () => (
             <Route path="topup" element={<TopUp />} />
             <Route path="history" element={<History />} />
             <Route path="referral" element={<Referral />} />
-            <Route path="adaptive-training/:sessionId" element={<AdaptiveTrainingPage />} />
+            <Route path="adaptive-training/:sessionId" element={<AdaptiveTraining />} />
             <Route path="exam-session/:sessionId" element={<ExamSessionPage />} />
           </Route>
 
