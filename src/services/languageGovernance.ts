@@ -64,7 +64,7 @@ const SCRIPT_RANGES: Record<string, RegExp> = {
   latin: /[A-Za-zÀ-ÿ]/g,
 };
 
-interface ValidationResult {
+export interface ValidationResult {
   isValid: boolean;
   detectedLanguage: ExamLanguage | 'unknown';
   confidence: number;

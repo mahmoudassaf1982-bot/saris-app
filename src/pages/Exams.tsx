@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Brain, ClipboardCheck, BarChart3, ChevronDown, ChevronUp, X, AlertTriangle, Coins, Bot, TrendingDown } from "lucide-react";
+import { BookOpen, Brain, ClipboardCheck, BarChart3, ChevronDown, ChevronUp, X, AlertTriangle, Coins, Bot, TrendingDown, Globe } from "lucide-react";
 import { mockExamTemplates, mockUser, mockStats } from "@/data/mock-data";
+import { SUPPORTED_LANGUAGES, getLanguageLabel, type ExamLanguage } from "@/services/languageGovernance";
+import { buildGenerationPayload, type ExamDNAConfig } from "@/services/generationConfig";
 
 type SessionType = "smart_training" | "simulation";
 
@@ -11,17 +13,36 @@ const Exams = () => {
   const [expandedExam, setExpandedExam] = useState<string | null>(null);
   const [modalExam, setModalExam] = useState<typeof mockExamTemplates[0] | null>(null);
   const [modalType, setModalType] = useState<SessionType>("smart_training");
+  const [selectedLanguage, setSelectedLanguage] = useState<ExamLanguage>("ar");
 
   const openModal = (exam: typeof mockExamTemplates[0], type: SessionType) => {
     setModalExam(exam);
     setModalType(type);
+    setSelectedLanguage(exam.examLanguage as ExamLanguage);
   };
 
   const cost = modalExam ? (modalType === "smart_training" ? modalExam.trainingCost : modalExam.simulationCost) : 0;
   const canAfford = mockUser.isDiamond || mockStats.balance >= cost;
 
   const startSession = () => {
-    if (!canAfford) return;
+    if (!canAfford || !modalExam) return;
+
+    // Build generation payload from DNA config — this is the real integration point
+    const dnaConfig: ExamDNAConfig = {
+      examId: modalExam.id,
+      examName: modalExam.name,
+      examLanguage: selectedLanguage,
+      dna: modalExam.dna,
+      sections: modalExam.sections.map(s => ({ id: s.id, name: s.name, questions: s.questions })),
+    };
+    const payload = buildGenerationPayload(dnaConfig);
+    console.log('[DNA→Generation] Payload built:', {
+      examId: payload.examId,
+      language: payload.language,
+      directive: payload.languageDirective,
+    });
+    console.log('[DNA→Generation] System prompt:\n', payload.systemPrompt);
+
     if (modalType === "smart_training") navigate("/app/adaptive-training/mock-session-1");
     else navigate("/app/exam-session/mock-session-2");
     setModalExam(null);
@@ -52,9 +73,15 @@ const Exams = () => {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className="font-tajawal font-bold text-base text-saris-text">{exam.name}</h3>
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-saris-full font-tajawal text-xs ${exam.categoryColor}`}>
-                    {exam.category}
-                  </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`inline-block px-2 py-0.5 rounded-saris-full font-tajawal text-xs ${exam.categoryColor}`}>
+                      {exam.category}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-saris-full font-tajawal text-xs bg-saris-purple/10 text-saris-purple">
+                      <Globe className="w-3 h-3" />
+                      {getLanguageLabel(exam.examLanguage as ExamLanguage)}
+                    </span>
+                  </div>
                 </div>
                 <BookOpen className="w-5 h-5 text-saris-navy flex-shrink-0" />
               </div>
@@ -150,6 +177,25 @@ const Exams = () => {
               </div>
 
               <p className="font-tajawal text-sm text-saris-text-2 mb-4">{modalExam.name}</p>
+
+              {/* Exam Language — DNA Config */}
+              <div className="flex items-center justify-between bg-saris-bg rounded-saris-md p-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-saris-purple" />
+                  <span className="font-tajawal text-sm text-saris-text">لغة الاختبار</span>
+                </div>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value as ExamLanguage)}
+                  className="bg-saris-bg-card border border-saris-border rounded-saris-md px-3 py-1.5 font-tajawal text-sm text-saris-text focus:outline-none focus:ring-2 focus:ring-saris-purple/30"
+                >
+                  {SUPPORTED_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.label} ({lang.nativeName})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               {/* Cost */}
               <div className="flex items-center justify-between bg-saris-bg rounded-saris-md p-3 mb-4">
