@@ -13,6 +13,7 @@ const Exams = () => {
   const [expandedExam, setExpandedExam] = useState<string | null>(null);
   const [modalExam, setModalExam] = useState<typeof mockExamTemplates[0] | null>(null);
   const [modalType, setModalType] = useState<SessionType>("smart_training");
+  const [selectedLanguage, setSelectedLanguage] = useState<ExamLanguage>("ar");
 
   const openModal = (exam: typeof mockExamTemplates[0], type: SessionType) => {
     setModalExam(exam);
