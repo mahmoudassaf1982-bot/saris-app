@@ -13,7 +13,6 @@ import {
   createInitialState, selectNextQuestion, processAnswer, getSessionResults,
   type STESessionState,
 } from '@/services/smartTrainingEngine';
-import { getQuestionText, getOptionTexts } from '@/data/mock-questions';
 import type { MockQuestion } from '@/data/mock-questions';
 
 type Phase = 'loading' | 'error' | 'active' | 'submitting' | 'results' | 'first_celebration';
@@ -49,16 +48,16 @@ export default function AdaptiveTraining() {
         setPhase('error');
         return;
       }
-      const initial = createInitialState(55, 15, 'ar');
-      const { question: firstQ, state: stateAfterSelect } = selectNextQuestion(initial);
+      const initial = createInitialState(55, 15);
+      const firstQ = selectNextQuestion(initial);
       if (!firstQ) {
         setPhase('error');
         return;
       }
-      stateAfterSelect.questionsServed = [firstQ];
-      stateAfterSelect.difficultyProgression = [];
-      stateAfterSelect.questionStartTime = Date.now();
-      setSteState(stateAfterSelect);
+      initial.questionsServed = [firstQ];
+      initial.difficultyProgression = [];
+      initial.questionStartTime = Date.now();
+      setSteState(initial);
       setCurrentQuestion(firstQ);
       setPhase('active');
     }, 500);
@@ -100,17 +99,17 @@ export default function AdaptiveTraining() {
         return;
       }
 
-      const { question: nextQ, state: stateAfterNextSelect } = selectNextQuestion(newState);
+      const nextQ = selectNextQuestion(newState);
       if (!nextQ) {
-        setSteState(stateAfterNextSelect);
+        setSteState(newState);
         setPhase('submitting');
         setTimeout(() => setPhase('results'), 1500);
         return;
       }
 
-      stateAfterNextSelect.questionsServed = [...stateAfterNextSelect.questionsServed, nextQ];
-      stateAfterNextSelect.questionStartTime = Date.now();
-      setSteState(stateAfterNextSelect);
+      newState.questionsServed = [...newState.questionsServed, nextQ];
+      newState.questionStartTime = Date.now();
+      setSteState(newState);
       setCurrentQuestion(nextQ);
       setSelectedOption(null);
       setConfirmed(false);
@@ -264,7 +263,7 @@ export default function AdaptiveTraining() {
                 <span className="font-inter font-bold text-sm text-primary">{questionNum}</span>
               </div>
               <div className="flex-1">
-                <p className="font-tajawal text-lg font-semibold text-foreground leading-relaxed">{getQuestionText(currentQuestion, steState.examLanguage)}</p>
+                <p className="font-tajawal text-lg font-semibold text-foreground leading-relaxed">{currentQuestion.text_ar}</p>
                 <p className="font-tajawal text-xs text-muted-foreground mt-1">{currentQuestion.sectionName} • {currentQuestion.topic}</p>
               </div>
             </div>
@@ -303,7 +302,7 @@ export default function AdaptiveTraining() {
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm transition-colors ${letterClass}`}>
                       {arabicLetters[i]}
                     </div>
-                    <span className="font-tajawal font-medium text-sm text-foreground flex-1 text-right">{getOptionTexts(currentQuestion, steState.examLanguage)[i]}</span>
+                    <span className="font-tajawal font-medium text-sm text-foreground flex-1 text-right">{opt.textAr}</span>
                     {isCorrectOpt && <CheckCircle2 className="w-5 h-5 text-saris-success flex-shrink-0" />}
                     {isWrongSelection && <XCircle className="w-5 h-5 text-saris-danger flex-shrink-0" />}
                   </button>

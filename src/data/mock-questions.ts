@@ -1,29 +1,11 @@
 export interface MockQuestion {
   id: string;
   text_ar: string;
-  text_en?: string;
-  text_fr?: string;
   difficulty: 'easy' | 'medium' | 'hard';
   sectionId: string;
   sectionName: string;
   topic: string;
-  options: { id: string; textAr: string; textEn?: string; textFr?: string }[];
-}
-
-/** Returns the question text for the given language, falling back to Arabic */
-export function getQuestionText(q: MockQuestion, lang: 'ar' | 'en' | 'fr'): string {
-  if (lang === 'en' && q.text_en) return q.text_en;
-  if (lang === 'fr' && q.text_fr) return q.text_fr;
-  return q.text_ar;
-}
-
-/** Returns option texts for the given language, falling back to Arabic */
-export function getOptionTexts(q: MockQuestion, lang: 'ar' | 'en' | 'fr'): string[] {
-  return q.options.map(o => {
-    if (lang === 'en' && o.textEn) return o.textEn;
-    if (lang === 'fr' && o.textFr) return o.textFr;
-    return o.textAr;
-  });
+  options: { id: string; textAr: string }[];
 }
 
 export const mockAnswerKeys: Record<string, string> = {

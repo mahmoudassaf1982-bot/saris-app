@@ -145,7 +145,6 @@ export const mockExamTemplates = [
     trainingCost: 5,
     simulationCost: 10,
     dna: { easy: 30, medium: 50, hard: 20 },
-    examLanguage: "ar" as const,
     sections: [
       { id: "sec_alg", name: "الجبر والهندسة", questions: 15, time: 20 },
       { id: "sec_stats", name: "الإحصاء والاحتمالات", questions: 12, time: 15 },
@@ -165,7 +164,6 @@ export const mockExamTemplates = [
     trainingCost: 5,
     simulationCost: 8,
     dna: { easy: 25, medium: 55, hard: 20 },
-    examLanguage: "ar" as const,
     sections: [
       { id: "sec_basic", name: "الحساب الأساسي", questions: 20, time: 25 },
       { id: "sec_adv", name: "الجبر المتقدم", questions: 15, time: 20 },
