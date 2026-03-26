@@ -1,4 +1,4 @@
-import { MockQuestion, mockAnswerKeys, mockQuestionPool } from '@/data/mock-questions';
+import { MockQuestion, mockAnswerKeys, mockQuestionPool, getQuestionText, getOptionTexts } from '@/data/mock-questions';
 import { validateFullQuestion, buildLanguagePromptDirective, type ExamLanguage } from '@/services/languageGovernance';
 
 export interface STEAnswer {
@@ -69,17 +69,16 @@ export function createInitialState(
  */
 function validateQuestionForSession(
   question: MockQuestion,
-  state: STESessionState,
-  maxRetries: number = 3
+  state: STESessionState
 ): { valid: boolean; state: STESessionState } {
-  const optionTexts = question.options.map(o => o.textAr);
-  const result = validateFullQuestion(question.text_ar, optionTexts, state.examLanguage);
+  const questionText = getQuestionText(question, state.examLanguage);
+  const optionTexts = getOptionTexts(question, state.examLanguage);
+  const result = validateFullQuestion(questionText, optionTexts, state.examLanguage);
 
   if (result.isValid) {
     return { valid: true, state };
   }
 
-  // Question rejected — log it
   console.warn(
     `[STE Language Gate] Question "${question.id}" REJECTED: ${result.reason}. ` +
     `Expected: ${state.examLanguage}, Detected: ${result.detectedLanguage}, Confidence: ${result.confidence.toFixed(2)}`
@@ -152,14 +151,12 @@ export function selectNextQuestion(state: STESessionState): { question: MockQues
     console.warn(`[STE Language Gate] Retry ${retryCount}/${MAX_RETRIES} — selecting another question`);
   }
 
-  // All retries exhausted — try any remaining question without validation
-  const fallback = getCandidates();
-  if (fallback.length > 0) {
-    const q = fallback[Math.floor(Math.random() * fallback.length)];
-    console.warn(`[STE Language Gate] Max retries reached. Serving question "${q.id}" without validation.`);
-    return { question: q, state: currentState };
-  }
-
+  // All retries exhausted — do NOT serve unvalidated questions
+  console.error(
+    `[STE Language Gate] Max retries (${MAX_RETRIES}) exhausted. ` +
+    `No question passed language validation for "${currentState.examLanguage}". ` +
+    `Rejected IDs: [${[...currentState.rejectedQuestionIds].join(', ')}]. Returning null.`
+  );
   return { question: null, state: currentState };
 }
 
