@@ -178,6 +178,25 @@ const Exams = () => {
 
               <p className="font-tajawal text-sm text-saris-text-2 mb-4">{modalExam.name}</p>
 
+              {/* Exam Language — DNA Config */}
+              <div className="flex items-center justify-between bg-saris-bg rounded-saris-md p-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-saris-purple" />
+                  <span className="font-tajawal text-sm text-saris-text">لغة الاختبار</span>
+                </div>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value as ExamLanguage)}
+                  className="bg-saris-bg-card border border-saris-border rounded-saris-md px-3 py-1.5 font-tajawal text-sm text-saris-text focus:outline-none focus:ring-2 focus:ring-saris-purple/30"
+                >
+                  {SUPPORTED_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.label} ({lang.nativeName})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Cost */}
               <div className="flex items-center justify-between bg-saris-bg rounded-saris-md p-3 mb-4">
                 <div className="flex items-center gap-2">
