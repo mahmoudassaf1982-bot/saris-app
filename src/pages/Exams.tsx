@@ -88,7 +88,7 @@ const Exams = () => {
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-saris-full font-tajawal text-xs bg-saris-purple/10 text-saris-purple">
                       <Globe className="w-3 h-3" />
-                      {getLanguageLabel(exam.examLanguage as ExamLanguage)}
+                      {getLanguageLabel(getExamLanguage(exam.id, exam.examLanguage))}
                     </span>
                   </div>
                 </div>
