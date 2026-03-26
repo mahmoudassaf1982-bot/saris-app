@@ -73,9 +73,15 @@ const Exams = () => {
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h3 className="font-tajawal font-bold text-base text-saris-text">{exam.name}</h3>
-                  <span className={`inline-block mt-1 px-2 py-0.5 rounded-saris-full font-tajawal text-xs ${exam.categoryColor}`}>
-                    {exam.category}
-                  </span>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`inline-block px-2 py-0.5 rounded-saris-full font-tajawal text-xs ${exam.categoryColor}`}>
+                      {exam.category}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-saris-full font-tajawal text-xs bg-saris-purple/10 text-saris-purple">
+                      <Globe className="w-3 h-3" />
+                      {getLanguageLabel(exam.examLanguage as ExamLanguage)}
+                    </span>
+                  </div>
                 </div>
                 <BookOpen className="w-5 h-5 text-saris-navy flex-shrink-0" />
               </div>
