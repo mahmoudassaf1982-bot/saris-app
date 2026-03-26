@@ -36,6 +36,17 @@ const Exams = () => {
     });
   };
 
+  const resetExamLanguage = (examId: string) => {
+    setExamLanguageOverrides(prev => {
+      const next = { ...prev };
+      delete next[examId];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const hasLanguageOverride = (examId: string) => examId in examLanguageOverrides;
+
   const openModal = (exam: typeof mockExamTemplates[0], type: SessionType) => {
     setModalExam(exam);
     setModalType(type);
@@ -217,7 +228,16 @@ const Exams = () => {
                 </select>
               </div>
 
-              {/* Cost */}
+              {hasLanguageOverride(modalExam.id) && (
+                <button
+                  onClick={() => resetExamLanguage(modalExam.id)}
+                  className="w-full flex items-center justify-center gap-1.5 text-saris-text-3 font-tajawal text-xs border border-dashed border-saris-border rounded-saris-md h-7 mb-4 hover:text-saris-danger hover:border-saris-danger transition-colors"
+                >
+                  إعادة تعيين إلى اللغة الافتراضية ({getLanguageLabel(modalExam.examLanguage as ExamLanguage)})
+                </button>
+              )}
+
+
               <div className="flex items-center justify-between bg-saris-bg rounded-saris-md p-3 mb-4">
                 <div className="flex items-center gap-2">
                   <Coins className="w-4 h-4 text-saris-orange" />
