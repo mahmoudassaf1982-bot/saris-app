@@ -48,16 +48,16 @@ export default function AdaptiveTraining() {
         setPhase('error');
         return;
       }
-      const initial = createInitialState(55, 15);
-      const firstQ = selectNextQuestion(initial);
+      const initial = createInitialState(55, 15, 'ar');
+      const { question: firstQ, state: stateAfterSelect } = selectNextQuestion(initial);
       if (!firstQ) {
         setPhase('error');
         return;
       }
-      initial.questionsServed = [firstQ];
-      initial.difficultyProgression = [];
-      initial.questionStartTime = Date.now();
-      setSteState(initial);
+      stateAfterSelect.questionsServed = [firstQ];
+      stateAfterSelect.difficultyProgression = [];
+      stateAfterSelect.questionStartTime = Date.now();
+      setSteState(stateAfterSelect);
       setCurrentQuestion(firstQ);
       setPhase('active');
     }, 500);
@@ -99,17 +99,17 @@ export default function AdaptiveTraining() {
         return;
       }
 
-      const nextQ = selectNextQuestion(newState);
+      const { question: nextQ, state: stateAfterNextSelect } = selectNextQuestion(newState);
       if (!nextQ) {
-        setSteState(newState);
+        setSteState(stateAfterNextSelect);
         setPhase('submitting');
         setTimeout(() => setPhase('results'), 1500);
         return;
       }
 
-      newState.questionsServed = [...newState.questionsServed, nextQ];
-      newState.questionStartTime = Date.now();
-      setSteState(newState);
+      stateAfterNextSelect.questionsServed = [...stateAfterNextSelect.questionsServed, nextQ];
+      stateAfterNextSelect.questionStartTime = Date.now();
+      setSteState(stateAfterNextSelect);
       setCurrentQuestion(nextQ);
       setSelectedOption(null);
       setConfirmed(false);
