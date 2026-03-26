@@ -18,13 +18,31 @@ const Exams = () => {
   const openModal = (exam: typeof mockExamTemplates[0], type: SessionType) => {
     setModalExam(exam);
     setModalType(type);
+    setSelectedLanguage(exam.examLanguage as ExamLanguage);
   };
 
   const cost = modalExam ? (modalType === "smart_training" ? modalExam.trainingCost : modalExam.simulationCost) : 0;
   const canAfford = mockUser.isDiamond || mockStats.balance >= cost;
 
   const startSession = () => {
-    if (!canAfford) return;
+    if (!canAfford || !modalExam) return;
+
+    // Build generation payload from DNA config — this is the real integration point
+    const dnaConfig: ExamDNAConfig = {
+      examId: modalExam.id,
+      examName: modalExam.name,
+      examLanguage: selectedLanguage,
+      dna: modalExam.dna,
+      sections: modalExam.sections.map(s => ({ id: s.id, name: s.name, questions: s.questions })),
+    };
+    const payload = buildGenerationPayload(dnaConfig);
+    console.log('[DNA→Generation] Payload built:', {
+      examId: payload.examId,
+      language: payload.language,
+      directive: payload.languageDirective,
+    });
+    console.log('[DNA→Generation] System prompt:\n', payload.systemPrompt);
+
     if (modalType === "smart_training") navigate("/app/adaptive-training/mock-session-1");
     else navigate("/app/exam-session/mock-session-2");
     setModalExam(null);
