@@ -13,12 +13,21 @@ const Exams = () => {
   const [expandedExam, setExpandedExam] = useState<string | null>(null);
   const [modalExam, setModalExam] = useState<typeof mockExamTemplates[0] | null>(null);
   const [modalType, setModalType] = useState<SessionType>("smart_training");
-  const [selectedLanguage, setSelectedLanguage] = useState<ExamLanguage>("ar");
+
+  // Persistent exam language overrides — survives modal close/reopen
+  const [examLanguageOverrides, setExamLanguageOverrides] = useState<Record<string, ExamLanguage>>({});
+
+  const getExamLanguage = (examId: string, defaultLang: string): ExamLanguage => {
+    return examLanguageOverrides[examId] ?? (defaultLang as ExamLanguage);
+  };
+
+  const setExamLanguage = (examId: string, lang: ExamLanguage) => {
+    setExamLanguageOverrides(prev => ({ ...prev, [examId]: lang }));
+  };
 
   const openModal = (exam: typeof mockExamTemplates[0], type: SessionType) => {
     setModalExam(exam);
     setModalType(type);
-    setSelectedLanguage(exam.examLanguage as ExamLanguage);
   };
 
   const cost = modalExam ? (modalType === "smart_training" ? modalExam.trainingCost : modalExam.simulationCost) : 0;
@@ -31,7 +40,7 @@ const Exams = () => {
     const dnaConfig: ExamDNAConfig = {
       examId: modalExam.id,
       examName: modalExam.name,
-      examLanguage: selectedLanguage,
+      examLanguage: getExamLanguage(modalExam.id, modalExam.examLanguage),
       dna: modalExam.dna,
       sections: modalExam.sections.map(s => ({ id: s.id, name: s.name, questions: s.questions })),
     };
@@ -79,7 +88,7 @@ const Exams = () => {
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-saris-full font-tajawal text-xs bg-saris-purple/10 text-saris-purple">
                       <Globe className="w-3 h-3" />
-                      {getLanguageLabel(exam.examLanguage as ExamLanguage)}
+                      {getLanguageLabel(getExamLanguage(exam.id, exam.examLanguage))}
                     </span>
                   </div>
                 </div>
@@ -185,8 +194,8 @@ const Exams = () => {
                   <span className="font-tajawal text-sm text-saris-text">لغة الاختبار</span>
                 </div>
                 <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value as ExamLanguage)}
+                  value={getExamLanguage(modalExam.id, modalExam.examLanguage)}
+                  onChange={(e) => setExamLanguage(modalExam.id, e.target.value as ExamLanguage)}
                   className="bg-saris-bg-card border border-saris-border rounded-saris-md px-3 py-1.5 font-tajawal text-sm text-saris-text focus:outline-none focus:ring-2 focus:ring-saris-purple/30"
                 >
                   {SUPPORTED_LANGUAGES.map((lang) => (
