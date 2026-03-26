@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Brain, ClipboardCheck, BarChart3, ChevronDown, ChevronUp, X, AlertTriangle, Coins, Bot, TrendingDown } from "lucide-react";
+import { BookOpen, Brain, ClipboardCheck, BarChart3, ChevronDown, ChevronUp, X, AlertTriangle, Coins, Bot, TrendingDown, Globe } from "lucide-react";
 import { mockExamTemplates, mockUser, mockStats } from "@/data/mock-data";
+import { SUPPORTED_LANGUAGES, getLanguageLabel, type ExamLanguage } from "@/services/languageGovernance";
+import { buildGenerationPayload, type ExamDNAConfig } from "@/services/generationConfig";
 
 type SessionType = "smart_training" | "simulation";
 
