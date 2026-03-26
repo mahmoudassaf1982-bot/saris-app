@@ -36,6 +36,17 @@ const Exams = () => {
     });
   };
 
+  const resetExamLanguage = (examId: string) => {
+    setExamLanguageOverrides(prev => {
+      const next = { ...prev };
+      delete next[examId];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const hasLanguageOverride = (examId: string) => examId in examLanguageOverrides;
+
   const openModal = (exam: typeof mockExamTemplates[0], type: SessionType) => {
     setModalExam(exam);
     setModalType(type);
