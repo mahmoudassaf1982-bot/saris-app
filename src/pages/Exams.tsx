@@ -14,15 +14,26 @@ const Exams = () => {
   const [modalExam, setModalExam] = useState<typeof mockExamTemplates[0] | null>(null);
   const [modalType, setModalType] = useState<SessionType>("smart_training");
 
-  // Persistent exam language overrides — survives modal close/reopen
-  const [examLanguageOverrides, setExamLanguageOverrides] = useState<Record<string, ExamLanguage>>({});
+  // Persistent exam language overrides — survives modal close/reopen AND page reload
+  const STORAGE_KEY = "saris_exam_language_overrides";
+
+  const [examLanguageOverrides, setExamLanguageOverrides] = useState<Record<string, ExamLanguage>>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  });
 
   const getExamLanguage = (examId: string, defaultLang: string): ExamLanguage => {
     return examLanguageOverrides[examId] ?? (defaultLang as ExamLanguage);
   };
 
   const setExamLanguage = (examId: string, lang: ExamLanguage) => {
-    setExamLanguageOverrides(prev => ({ ...prev, [examId]: lang }));
+    setExamLanguageOverrides(prev => {
+      const next = { ...prev, [examId]: lang };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
   };
 
   const openModal = (exam: typeof mockExamTemplates[0], type: SessionType) => {
