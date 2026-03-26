@@ -40,7 +40,7 @@ const Exams = () => {
     const dnaConfig: ExamDNAConfig = {
       examId: modalExam.id,
       examName: modalExam.name,
-      examLanguage: selectedLanguage,
+      examLanguage: getExamLanguage(modalExam.id, modalExam.examLanguage),
       dna: modalExam.dna,
       sections: modalExam.sections.map(s => ({ id: s.id, name: s.name, questions: s.questions })),
     };
@@ -194,8 +194,8 @@ const Exams = () => {
                   <span className="font-tajawal text-sm text-saris-text">لغة الاختبار</span>
                 </div>
                 <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value as ExamLanguage)}
+                  value={getExamLanguage(modalExam.id, modalExam.examLanguage)}
+                  onChange={(e) => setExamLanguage(modalExam.id, e.target.value as ExamLanguage)}
                   className="bg-saris-bg-card border border-saris-border rounded-saris-md px-3 py-1.5 font-tajawal text-sm text-saris-text focus:outline-none focus:ring-2 focus:ring-saris-purple/30"
                 >
                   {SUPPORTED_LANGUAGES.map((lang) => (
