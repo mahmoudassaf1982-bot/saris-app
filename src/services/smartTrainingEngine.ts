@@ -1,4 +1,5 @@
 import { MockQuestion, mockAnswerKeys, mockQuestionPool } from '@/data/mock-questions';
+import { validateFullQuestion, buildLanguagePromptDirective, type ExamLanguage } from '@/services/languageGovernance';
 
 export interface STEAnswer {
   questionId: string;
@@ -28,9 +29,16 @@ export interface STESessionState {
   consecutiveWrong: number;
   maxQuestions: number;
   questionStartTime: number;
+  examLanguage: ExamLanguage;
+  languagePromptDirective: string;
+  rejectedQuestionIds: string[];
 }
 
-export function createInitialState(previousAbility: number = 50, maxQuestions: number = 15): STESessionState {
+export function createInitialState(
+  previousAbility: number = 50,
+  maxQuestions: number = 15,
+  examLanguage: ExamLanguage = 'ar'
+): STESessionState {
   return {
     currentDifficulty: 'medium',
     currentAbility: previousAbility,
@@ -48,27 +56,111 @@ export function createInitialState(previousAbility: number = 50, maxQuestions: n
     consecutiveWrong: 0,
     maxQuestions,
     questionStartTime: Date.now(),
+    examLanguage,
+    languagePromptDirective: buildLanguagePromptDirective(examLanguage),
+    rejectedQuestionIds: [],
   };
 }
 
-export function selectNextQuestion(state: STESessionState): MockQuestion | null {
-  const servedIds = new Set(state.questionsServed.map(q => q.id));
-  const available = mockQuestionPool.filter(q => !servedIds.has(q.id) && q.difficulty === state.currentDifficulty);
+/**
+ * Validates a question against the session's exam language.
+ * Returns true if the question passes language validation.
+ * On failure, adds the question ID to rejectedQuestionIds.
+ */
+function validateQuestionForSession(
+  question: MockQuestion,
+  state: STESessionState,
+  maxRetries: number = 3
+): { valid: boolean; state: STESessionState } {
+  const optionTexts = question.options.map(o => o.textAr);
+  const result = validateFullQuestion(question.text_ar, optionTexts, state.examLanguage);
 
-  // Prefer weaker sections
-  const weakest = getWeakestSection(state);
-  if (weakest) {
-    const fromWeak = available.filter(q => q.sectionId === weakest);
-    if (fromWeak.length > 0) return fromWeak[Math.floor(Math.random() * fromWeak.length)];
+  if (result.isValid) {
+    return { valid: true, state };
   }
 
-  if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
+  // Question rejected — log it
+  console.warn(
+    `[STE Language Gate] Question "${question.id}" REJECTED: ${result.reason}. ` +
+    `Expected: ${state.examLanguage}, Detected: ${result.detectedLanguage}, Confidence: ${result.confidence.toFixed(2)}`
+  );
 
-  // Fallback: any unserved question
-  const anyAvailable = mockQuestionPool.filter(q => !servedIds.has(q.id));
-  if (anyAvailable.length > 0) return anyAvailable[Math.floor(Math.random() * anyAvailable.length)];
+  return {
+    valid: false,
+    state: {
+      ...state,
+      rejectedQuestionIds: [...state.rejectedQuestionIds, question.id],
+    },
+  };
+}
 
-  return null;
+/**
+ * Selects the next question with language validation gate.
+ * Each candidate is validated before being served.
+ * Rejected questions are skipped and logged (simulates re-generation).
+ */
+export function selectNextQuestion(state: STESessionState): { question: MockQuestion | null; state: STESessionState } {
+  const MAX_RETRIES = 3;
+  let currentState = state;
+  let retryCount = 0;
+
+  const servedIds = new Set(currentState.questionsServed.map(q => q.id));
+  const rejectedIds = new Set(currentState.rejectedQuestionIds);
+  const excludedIds = new Set([...servedIds, ...rejectedIds]);
+
+  const getCandidates = (difficulty?: string) => {
+    return mockQuestionPool.filter(q =>
+      !excludedIds.has(q.id) &&
+      (!difficulty || q.difficulty === difficulty)
+    );
+  };
+
+  while (retryCount < MAX_RETRIES) {
+    let candidates = getCandidates(currentState.currentDifficulty);
+
+    // Prefer weaker sections
+    const weakest = getWeakestSection(currentState);
+    if (weakest) {
+      const fromWeak = candidates.filter(q => q.sectionId === weakest);
+      if (fromWeak.length > 0) candidates = fromWeak;
+    }
+
+    if (candidates.length === 0) {
+      // Fallback: any unserved, non-rejected question
+      candidates = getCandidates();
+    }
+
+    if (candidates.length === 0) {
+      return { question: null, state: currentState };
+    }
+
+    const candidate = candidates[Math.floor(Math.random() * candidates.length)];
+    const validation = validateQuestionForSession(candidate, currentState);
+    currentState = validation.state;
+
+    if (validation.valid) {
+      console.log(
+        `[STE Language Gate] Question "${candidate.id}" ACCEPTED for language "${currentState.examLanguage}". ` +
+        `Prompt directive active: ${currentState.languagePromptDirective.substring(0, 50)}...`
+      );
+      return { question: candidate, state: currentState };
+    }
+
+    // Rejected — mark and retry
+    excludedIds.add(candidate.id);
+    retryCount++;
+    console.warn(`[STE Language Gate] Retry ${retryCount}/${MAX_RETRIES} — selecting another question`);
+  }
+
+  // All retries exhausted — try any remaining question without validation
+  const fallback = getCandidates();
+  if (fallback.length > 0) {
+    const q = fallback[Math.floor(Math.random() * fallback.length)];
+    console.warn(`[STE Language Gate] Max retries reached. Serving question "${q.id}" without validation.`);
+    return { question: q, state: currentState };
+  }
+
+  return { question: null, state: currentState };
 }
 
 function getWeakestSection(state: STESessionState): string | null {
