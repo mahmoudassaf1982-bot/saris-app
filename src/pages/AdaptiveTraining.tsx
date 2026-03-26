@@ -13,6 +13,7 @@ import {
   createInitialState, selectNextQuestion, processAnswer, getSessionResults,
   type STESessionState,
 } from '@/services/smartTrainingEngine';
+import { getQuestionText, getOptionTexts } from '@/data/mock-questions';
 import type { MockQuestion } from '@/data/mock-questions';
 
 type Phase = 'loading' | 'error' | 'active' | 'submitting' | 'results' | 'first_celebration';
@@ -263,7 +264,7 @@ export default function AdaptiveTraining() {
                 <span className="font-inter font-bold text-sm text-primary">{questionNum}</span>
               </div>
               <div className="flex-1">
-                <p className="font-tajawal text-lg font-semibold text-foreground leading-relaxed">{currentQuestion.text_ar}</p>
+                <p className="font-tajawal text-lg font-semibold text-foreground leading-relaxed">{getQuestionText(currentQuestion, steState.examLanguage)}</p>
                 <p className="font-tajawal text-xs text-muted-foreground mt-1">{currentQuestion.sectionName} • {currentQuestion.topic}</p>
               </div>
             </div>
@@ -302,7 +303,7 @@ export default function AdaptiveTraining() {
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm transition-colors ${letterClass}`}>
                       {arabicLetters[i]}
                     </div>
-                    <span className="font-tajawal font-medium text-sm text-foreground flex-1 text-right">{opt.textAr}</span>
+                    <span className="font-tajawal font-medium text-sm text-foreground flex-1 text-right">{getOptionTexts(currentQuestion, steState.examLanguage)[i]}</span>
                     {isCorrectOpt && <CheckCircle2 className="w-5 h-5 text-saris-success flex-shrink-0" />}
                     {isWrongSelection && <XCircle className="w-5 h-5 text-saris-danger flex-shrink-0" />}
                   </button>
