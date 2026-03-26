@@ -13,12 +13,21 @@ const Exams = () => {
   const [expandedExam, setExpandedExam] = useState<string | null>(null);
   const [modalExam, setModalExam] = useState<typeof mockExamTemplates[0] | null>(null);
   const [modalType, setModalType] = useState<SessionType>("smart_training");
-  const [selectedLanguage, setSelectedLanguage] = useState<ExamLanguage>("ar");
+
+  // Persistent exam language overrides — survives modal close/reopen
+  const [examLanguageOverrides, setExamLanguageOverrides] = useState<Record<string, ExamLanguage>>({});
+
+  const getExamLanguage = (examId: string, defaultLang: string): ExamLanguage => {
+    return examLanguageOverrides[examId] ?? (defaultLang as ExamLanguage);
+  };
+
+  const setExamLanguage = (examId: string, lang: ExamLanguage) => {
+    setExamLanguageOverrides(prev => ({ ...prev, [examId]: lang }));
+  };
 
   const openModal = (exam: typeof mockExamTemplates[0], type: SessionType) => {
     setModalExam(exam);
     setModalType(type);
-    setSelectedLanguage(exam.examLanguage as ExamLanguage);
   };
 
   const cost = modalExam ? (modalType === "smart_training" ? modalExam.trainingCost : modalExam.simulationCost) : 0;
