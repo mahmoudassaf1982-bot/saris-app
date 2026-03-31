@@ -129,8 +129,7 @@ export const mockTransactions = [
 export const mockCountries = [
   { id: "kw", name: "الكويت", flag: "🇰🇼" },
   { id: "sa", name: "السعودية", flag: "🇸🇦" },
-  { id: "tr", name: "تركيا", flag: "🇹🇷" },
-  { id: "qa", name: "قطر", flag: "🇶🇦" },
+  { id: "jo", name: "الأردن", flag: "🇯🇴" },
 ];
 
 export const mockExamTemplates = [
