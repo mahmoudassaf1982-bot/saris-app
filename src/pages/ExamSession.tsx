@@ -1,46 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Loader2, ClipboardCheck, Home, Clock, ChevronLeft, CheckCircle2, XCircle,
-  Lightbulb, AlertTriangle,
+  Loader2, ClipboardCheck, Home, Clock, ChevronLeft, ChevronRight,
+  Lightbulb, AlertTriangle, Flag, Layers, Grid3X3,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import SimulationSummary from '@/components/simulation/SimulationSummary';
 import { mockQuestionPool, mockAnswerKeys, type MockQuestion } from '@/data/mock-questions';
 
-type Phase = 'loading' | 'error' | 'active' | 'submitting' | 'results' | 'time_up';
+type Phase = 'loading' | 'error' | 'active' | 'confirm_finish' | 'submitting' | 'results' | 'time_up';
 
 const arabicLetters = ['أ', 'ب', 'ج', 'د'];
-const diffLabels: Record<string, string> = { easy: 'سهل', medium: 'متوسط', hard: 'صعب' };
-const diffBadgeColors: Record<string, string> = {
-  easy: 'bg-saris-success/10 text-saris-success',
-  medium: 'bg-saris-warning/10 text-saris-warning',
-  hard: 'bg-saris-danger/10 text-saris-danger',
-};
-
-interface SimAnswer {
-  questionId: string;
-  selectedOptionId: string;
-  correctOptionId: string;
-  isCorrect: boolean;
-  responseTimeMs: number;
-  difficulty: string;
-  sectionId: string;
-  sectionName: string;
-  topic: string;
-  usedHint: boolean;
-}
-
-// Build a fixed simulation pool: 15 questions in exam order (mixed difficulty)
-function buildSimulationPool(): MockQuestion[] {
-  const pool = [...mockQuestionPool];
-  // Shuffle and pick 15, ensuring mix of difficulties
-  const easy = pool.filter(q => q.difficulty === 'easy').sort(() => Math.random() - 0.5).slice(0, 5);
-  const medium = pool.filter(q => q.difficulty === 'medium').sort(() => Math.random() - 0.5).slice(0, 6);
-  const hard = pool.filter(q => q.difficulty === 'hard').sort(() => Math.random() - 0.5).slice(0, 4);
-  return [...easy, ...medium, ...hard];
-}
 
 // Mock hints for hard questions
 const mockHints: Record<string, string> = {
@@ -54,7 +25,40 @@ const mockHints: Record<string, string> = {
   q30: '20% من العدد = 45، إذاً العدد = 45 / 0.20',
 };
 
-const TOTAL_TIME_SECONDS = 15 * 60; // 15 minutes for 15 questions
+const TOTAL_TIME_SECONDS = 15 * 60;
+
+interface SimAnswer {
+  questionId: string;
+  selectedOptionId: string | null;
+  sectionId: string;
+  sectionName: string;
+  topic: string;
+  difficulty: string;
+  flagged: boolean;
+  hintText: string | null;
+}
+
+interface SectionInfo {
+  id: string;
+  name: string;
+  questionIndices: number[];
+}
+
+// Build simulation pool: 15 questions in section order
+function buildSimulationPool(): MockQuestion[] {
+  const pool = [...mockQuestionPool];
+  const easy = pool.filter(q => q.difficulty === 'easy').sort(() => Math.random() - 0.5).slice(0, 4);
+  const medium = pool.filter(q => q.difficulty === 'medium').sort(() => Math.random() - 0.5).slice(0, 7);
+  const hard = pool.filter(q => q.difficulty === 'hard').sort(() => Math.random() - 0.5).slice(0, 4);
+  // Group by section for ordered presentation
+  const all = [...easy, ...medium, ...hard];
+  const sectionOrder = ['sec_alg', 'sec_stats', 'sec_calc', 'sec_logic'];
+  const sorted: MockQuestion[] = [];
+  for (const sec of sectionOrder) {
+    sorted.push(...all.filter(q => q.sectionId === sec));
+  }
+  return sorted;
+}
 
 export default function ExamSession() {
   const { sessionId } = useParams();
@@ -63,15 +67,11 @@ export default function ExamSession() {
   const [phase, setPhase] = useState<Phase>('loading');
   const [questions, setQuestions] = useState<MockQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [confirmed, setConfirmed] = useState(false);
-  const [feedbackCorrect, setFeedbackCorrect] = useState<boolean | null>(null);
-  const [correctOptionId, setCorrectOptionId] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<SimAnswer[]>([]);
+  const [answers, setAnswers] = useState<Record<number, SimAnswer>>({});
   const [remainingSeconds, setRemainingSeconds] = useState(TOTAL_TIME_SECONDS);
-  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
-  const [showHint, setShowHint] = useState(false);
-  const [hintUsedForQuestion, setHintUsedForQuestion] = useState(false);
+  const [showQuestionGrid, setShowQuestionGrid] = useState(false);
+  const [hintsUsed, setHintsUsed] = useState<Record<string, string>>({}); // questionId -> hint text
+  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
 
   // Loading
   useEffect(() => {
@@ -80,7 +80,7 @@ export default function ExamSession() {
       const pool = buildSimulationPool();
       if (pool.length === 0) { setPhase('error'); return; }
       setQuestions(pool);
-      setQuestionStartTime(Date.now());
+      if (pool.length > 0) setActiveSectionId(pool[0].sectionId);
       setPhase('active');
     }, 500);
     return () => clearTimeout(timer);
@@ -88,7 +88,7 @@ export default function ExamSession() {
 
   // Countdown timer
   useEffect(() => {
-    if (phase !== 'active') return;
+    if (phase !== 'active' && phase !== 'confirm_finish') return;
     const interval = setInterval(() => {
       setRemainingSeconds(prev => {
         if (prev <= 1) {
@@ -110,56 +110,103 @@ export default function ExamSession() {
     }
   }, [phase]);
 
-  const currentQuestion = questions[currentIndex];
-  const maxQ = questions.length;
-  const isHardQuestion = currentQuestion?.difficulty === 'hard';
-  const hintAvailable = isHardQuestion && mockHints[currentQuestion?.id] && !hintUsedForQuestion;
-
-  const handleConfirm = useCallback(() => {
-    if (!selectedOption || !currentQuestion) return;
-    setConfirmed(true);
-
-    const correctId = mockAnswerKeys[currentQuestion.id];
-    const isCorrect = selectedOption === correctId;
-    const responseTimeMs = Date.now() - questionStartTime;
-
-    setFeedbackCorrect(isCorrect);
-    setCorrectOptionId(correctId);
-
-    const newAnswer: SimAnswer = {
-      questionId: currentQuestion.id,
-      selectedOptionId: selectedOption,
-      correctOptionId: correctId,
-      isCorrect,
-      responseTimeMs,
-      difficulty: currentQuestion.difficulty,
-      sectionId: currentQuestion.sectionId,
-      sectionName: currentQuestion.sectionName,
-      topic: currentQuestion.topic,
-      usedHint: hintUsedForQuestion,
-    };
-
-    const newAnswers = [...answers, newAnswer];
-    setAnswers(newAnswers);
-
-    setTimeout(() => {
-      if (currentIndex >= maxQ - 1) {
-        // Last question
-        setPhase('submitting');
-        setTimeout(() => setPhase('results'), 1500);
-        return;
+  // Derive sections
+  const sections: SectionInfo[] = useMemo(() => {
+    const map = new Map<string, SectionInfo>();
+    questions.forEach((q, i) => {
+      if (!map.has(q.sectionId)) {
+        map.set(q.sectionId, { id: q.sectionId, name: q.sectionName, questionIndices: [] });
       }
+      map.get(q.sectionId)!.questionIndices.push(i);
+    });
+    return Array.from(map.values());
+  }, [questions]);
 
-      setCurrentIndex(prev => prev + 1);
-      setSelectedOption(null);
-      setConfirmed(false);
-      setFeedbackCorrect(null);
-      setCorrectOptionId(null);
-      setShowHint(false);
-      setHintUsedForQuestion(false);
-      setQuestionStartTime(Date.now());
-    }, 1500);
-  }, [selectedOption, currentQuestion, questionStartTime, answers, currentIndex, maxQ, hintUsedForQuestion]);
+  // Hard questions count for hint limit
+  const maxHints = useMemo(() => questions.filter(q => q.difficulty === 'hard').length, [questions]);
+  const usedHintCount = Object.keys(hintsUsed).length;
+
+  const currentQuestion = questions[currentIndex];
+  const currentAnswer = answers[currentIndex];
+  const selectedOption = currentAnswer?.selectedOptionId ?? null;
+  const isFlagged = currentAnswer?.flagged ?? false;
+  const isHard = currentQuestion?.difficulty === 'hard';
+  const questionHint = currentQuestion ? hintsUsed[currentQuestion.id] : null;
+  const canUseHint = isHard && !questionHint && usedHintCount < maxHints;
+
+  const selectOption = useCallback((optionId: string) => {
+    if (!currentQuestion) return;
+    setAnswers(prev => ({
+      ...prev,
+      [currentIndex]: {
+        questionId: currentQuestion.id,
+        selectedOptionId: optionId,
+        sectionId: currentQuestion.sectionId,
+        sectionName: currentQuestion.sectionName,
+        topic: currentQuestion.topic,
+        difficulty: currentQuestion.difficulty,
+        flagged: prev[currentIndex]?.flagged ?? false,
+        hintText: prev[currentIndex]?.hintText ?? null,
+      },
+    }));
+  }, [currentIndex, currentQuestion]);
+
+  const toggleFlag = useCallback(() => {
+    if (!currentQuestion) return;
+    setAnswers(prev => ({
+      ...prev,
+      [currentIndex]: {
+        ...prev[currentIndex] ?? {
+          questionId: currentQuestion.id,
+          selectedOptionId: null,
+          sectionId: currentQuestion.sectionId,
+          sectionName: currentQuestion.sectionName,
+          topic: currentQuestion.topic,
+          difficulty: currentQuestion.difficulty,
+          hintText: null,
+        },
+        flagged: !(prev[currentIndex]?.flagged ?? false),
+      },
+    }));
+  }, [currentIndex, currentQuestion]);
+
+  const useHint = useCallback(() => {
+    if (!currentQuestion || !canUseHint) return;
+    const hintText = mockHints[currentQuestion.id] || 'حاول التفكير في المسألة بطريقة مختلفة وراجع القوانين الأساسية المتعلقة بالموضوع.';
+    setHintsUsed(prev => ({ ...prev, [currentQuestion.id]: hintText }));
+  }, [currentQuestion, canUseHint]);
+
+  const goToQuestion = useCallback((index: number) => {
+    setCurrentIndex(index);
+    setShowQuestionGrid(false);
+    const q = questions[index];
+    if (q) setActiveSectionId(q.sectionId);
+  }, [questions]);
+
+  const goNext = useCallback(() => {
+    if (currentIndex < questions.length - 1) {
+      const next = currentIndex + 1;
+      setCurrentIndex(next);
+      setActiveSectionId(questions[next].sectionId);
+    }
+  }, [currentIndex, questions]);
+
+  const goPrev = useCallback(() => {
+    if (currentIndex > 0) {
+      const prev = currentIndex - 1;
+      setCurrentIndex(prev);
+      setActiveSectionId(questions[prev].sectionId);
+    }
+  }, [currentIndex, questions]);
+
+  const handleFinish = useCallback(() => {
+    setPhase('confirm_finish');
+  }, []);
+
+  const confirmFinish = useCallback(() => {
+    setPhase('submitting');
+    setTimeout(() => setPhase('results'), 1500);
+  }, []);
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);
@@ -167,7 +214,10 @@ export default function ExamSession() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const timerColor = remainingSeconds < 60 ? 'text-saris-danger' : remainingSeconds < 180 ? 'text-saris-warning' : 'text-muted-foreground';
+  const timerColor = remainingSeconds < 300 ? 'text-destructive' : 'text-muted-foreground';
+
+  const answeredCount = Object.values(answers).filter(a => a.selectedOptionId).length;
+  const flaggedCount = Object.values(answers).filter(a => a.flagged).length;
 
   // ── LOADING ──
   if (phase === 'loading') {
@@ -215,88 +265,202 @@ export default function ExamSession() {
     );
   }
 
+  // ── CONFIRM FINISH ──
+  if (phase === 'confirm_finish') {
+    const unanswered = questions.length - answeredCount;
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6">
+        <AlertTriangle className="h-12 w-12 text-saris-warning" />
+        <h2 className="font-tajawal font-bold text-xl text-foreground">هل تريد إنهاء المحاكاة؟</h2>
+        <div className="text-center space-y-1">
+          <p className="font-tajawal text-sm text-muted-foreground">
+            أجبت على <span className="font-bold text-foreground">{answeredCount}</span> من <span className="font-bold text-foreground">{questions.length}</span> سؤال
+          </p>
+          {unanswered > 0 && (
+            <p className="font-tajawal text-sm text-destructive">
+              ⚠️ {unanswered} سؤال بدون إجابة
+            </p>
+          )}
+          {flaggedCount > 0 && (
+            <p className="font-tajawal text-sm text-saris-warning">
+              🚩 {flaggedCount} سؤال مُعلَّم للمراجعة
+            </p>
+          )}
+        </div>
+        <div className="flex gap-3 w-full max-w-xs">
+          <button onClick={() => setPhase('active')} className="flex-1 border border-border bg-card text-foreground font-tajawal font-bold text-sm rounded-xl h-11">
+            العودة
+          </button>
+          <button onClick={confirmFinish} className="flex-1 gradient-primary text-primary-foreground font-tajawal font-bold text-sm rounded-xl h-11">
+            إنهاء وعرض النتائج
+          </button>
+        </div>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Clock className={`w-4 h-4 ${timerColor}`} />
+          <span className={`font-inter font-bold text-sm ${timerColor}`}>{formatTime(remainingSeconds)}</span>
+        </div>
+      </div>
+    );
+  }
+
   // ── RESULTS ──
   if (phase === 'results') {
-    return <SimulationSummary answers={answers} totalQuestions={maxQ} totalTimeSeconds={TOTAL_TIME_SECONDS - remainingSeconds} />;
+    // Build results-compatible answers
+    const simAnswers = questions.map((q, i) => ({
+      questionId: q.id,
+      selectedOptionId: answers[i]?.selectedOptionId ?? null,
+      correctOptionId: mockAnswerKeys[q.id],
+      isCorrect: answers[i]?.selectedOptionId === mockAnswerKeys[q.id],
+      difficulty: q.difficulty,
+      sectionId: q.sectionId,
+      sectionName: q.sectionName,
+      topic: q.topic,
+      usedHint: !!hintsUsed[q.id],
+      flagged: answers[i]?.flagged ?? false,
+    }));
+    return (
+      <SimulationSummary
+        answers={simAnswers}
+        questions={questions}
+        totalQuestions={questions.length}
+        totalTimeSeconds={TOTAL_TIME_SECONDS - remainingSeconds}
+        hintsUsed={hintsUsed}
+      />
+    );
   }
 
   if (!currentQuestion) return null;
 
   const questionNum = currentIndex + 1;
+  const maxQ = questions.length;
 
   // ── ACTIVE SIMULATION ──
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Top Bar */}
-      <div className="sticky top-0 z-10 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ClipboardCheck className="h-4 w-4 text-saris-navy" />
-          <div>
-            <span className="font-tajawal font-bold text-sm text-foreground">محاكاة رسمية</span>
-            <span className="font-tajawal text-xs text-muted-foreground mr-2">اختبار القدرات الأكاديمية</span>
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 border-b border-border bg-card/95 backdrop-blur-sm px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ClipboardCheck className="h-4 w-4 text-primary" />
+            <div>
+              <span className="font-tajawal font-bold text-sm text-foreground">محاكاة رسمية</span>
+              <span className="font-tajawal text-xs text-muted-foreground mr-2">اختبار القدرات</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Clock className={`w-4 h-4 ${timerColor}`} />
+              <span className={`font-inter font-bold text-sm ${timerColor}`}>{formatTime(remainingSeconds)}</span>
+              {remainingSeconds < 60 && (
+                <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 0.8, repeat: Infinity }} className="text-xs">⚠️</motion.span>
+              )}
+            </div>
+            <button onClick={handleFinish} className="font-tajawal text-xs text-destructive font-bold hover:text-destructive/80 transition-colors">
+              إنهاء
+            </button>
           </div>
         </div>
-        <button onClick={() => navigate('/app/exams')} className="font-tajawal text-xs text-muted-foreground hover:text-foreground transition-colors">
-          خروج
-        </button>
+
+        {/* Section Tabs */}
+        {sections.length > 1 && (
+          <div className="flex gap-1.5 mt-2 overflow-x-auto no-scrollbar">
+            {sections.map(sec => (
+              <button
+                key={sec.id}
+                onClick={() => {
+                  setActiveSectionId(sec.id);
+                  setCurrentIndex(sec.questionIndices[0]);
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-tajawal font-bold whitespace-nowrap transition-colors ${
+                  activeSectionId === sec.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-muted-foreground hover:bg-secondary/80'
+                }`}
+              >
+                <Layers className="w-3 h-3" />
+                {sec.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 px-4 py-3 max-w-[430px] mx-auto w-full space-y-3">
-        {/* Timer & Progress Header */}
-        <div className="rounded-xl border border-border bg-card p-3 shadow-card">
+        {/* Progress & Question Counter */}
+        <div className="rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-saris-navy/10 text-saris-navy">
-                <ClipboardCheck className="w-3 h-3" /> محاكاة رسمية
-              </span>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${diffBadgeColors[currentQuestion.difficulty]}`}>
-                {diffLabels[currentQuestion.difficulty]}
+              <span className="font-tajawal text-xs text-muted-foreground">
+                📚 {currentQuestion.sectionName}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-inter text-xs font-bold text-foreground">{questionNum}/{maxQ}</span>
-              <span className="font-tajawal text-[10px] text-muted-foreground">سؤال</span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowQuestionGrid(!showQuestionGrid)}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-tajawal text-muted-foreground hover:bg-secondary transition-colors"
+              >
+                <Grid3X3 className="w-3.5 h-3.5" />
+                {questionNum}/{maxQ}
+              </button>
+              <button
+                onClick={toggleFlag}
+                className={`p-1.5 rounded-lg transition-colors ${isFlagged ? 'bg-saris-warning/10 text-saris-warning' : 'text-muted-foreground hover:bg-secondary'}`}
+              >
+                <Flag className="w-4 h-4" fill={isFlagged ? 'currentColor' : 'none'} />
+              </button>
             </div>
           </div>
-
-          {/* Countdown Timer */}
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Clock className={`w-4 h-4 ${timerColor}`} />
-            <span className={`font-inter font-bold text-lg ${timerColor}`}>
-              {formatTime(remainingSeconds)}
-            </span>
-            {remainingSeconds < 60 && (
-              <motion.span
-                animate={{ opacity: [1, 0.3, 1] }}
-                transition={{ duration: 0.8, repeat: Infinity }}
-                className="text-xs font-tajawal text-saris-danger font-bold"
-              >
-                ⚠️
-              </motion.span>
+          <Progress value={(answeredCount / maxQ) * 100} className="h-1.5" />
+          <div className="flex items-center justify-between mt-1.5">
+            <span className="font-tajawal text-[10px] text-muted-foreground">{answeredCount} من {maxQ} تم الإجابة</span>
+            {flaggedCount > 0 && (
+              <span className="font-tajawal text-[10px] text-saris-warning">🚩 {flaggedCount} مُعلَّم</span>
             )}
           </div>
-
-          <Progress value={(questionNum / maxQ) * 100} className="h-1.5" />
-
-          {/* ×3 Weight Indicator */}
-          <div className="flex items-center justify-center mt-2">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-saris-purple/10 text-saris-purple">
-              ×3 وزن التأثير على التنبؤ
-            </span>
-          </div>
         </div>
 
-        {/* Section Info */}
-        <div className="flex items-center gap-2 text-xs">
-          <span className="font-tajawal text-muted-foreground bg-secondary px-2 py-1 rounded-full">
-            📚 {currentQuestion.sectionName}
-          </span>
-          <span className="font-tajawal text-muted-foreground">
-            {currentQuestion.topic}
-          </span>
-        </div>
+        {/* Question Navigation Grid */}
+        <AnimatePresence>
+          {showQuestionGrid && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="rounded-xl border border-border bg-card p-3 shadow-[var(--shadow-card)]">
+                <div className="grid grid-cols-5 gap-2">
+                  {questions.map((q, i) => {
+                    const ans = answers[i];
+                    const isAnswered = !!ans?.selectedOptionId;
+                    const isFl = ans?.flagged;
+                    const isCurrent = i === currentIndex;
+                    let bg = 'bg-secondary text-muted-foreground';
+                    if (isCurrent) bg = 'bg-primary text-primary-foreground';
+                    else if (isFl) bg = 'bg-saris-warning/20 text-saris-warning border border-saris-warning/30';
+                    else if (isAnswered) bg = 'bg-primary/10 text-primary';
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => goToQuestion(i)}
+                        className={`w-full aspect-square rounded-lg font-inter font-bold text-xs flex items-center justify-center transition-colors ${bg}`}
+                      >
+                        {i + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center gap-3 mt-2 text-[10px] font-tajawal text-muted-foreground">
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-primary/10 inline-block" /> تمت الإجابة</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-saris-warning/20 border border-saris-warning/30 inline-block" /> مُعلَّم</span>
+                  <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded bg-secondary inline-block" /> لم يُجَب</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Question Card */}
+        {/* Question Card - NO difficulty badge shown */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id}
@@ -304,34 +468,25 @@ export default function ExamSession() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
-            className="rounded-2xl border border-border bg-card p-5 shadow-card"
+            className="rounded-2xl border border-border bg-card p-5 shadow-[var(--shadow-card)]"
           >
             <div className="flex items-start gap-3 mb-4">
-              <div className="w-8 h-8 rounded-full bg-saris-navy/10 flex items-center justify-center flex-shrink-0">
-                <span className="font-inter font-bold text-sm text-saris-navy">{questionNum}</span>
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="font-inter font-bold text-sm text-primary">{questionNum}</span>
               </div>
-              <p className="font-tajawal text-[17px] font-semibold text-foreground leading-relaxed flex-1">{currentQuestion.text_ar}</p>
+              <p className="font-tajawal text-[17px] font-semibold text-foreground leading-relaxed flex-1">
+                {currentQuestion.text_ar}
+              </p>
             </div>
 
-            {/* Options */}
+            {/* Options - NO correct/wrong feedback during exam */}
             <div className="space-y-2">
               {currentQuestion.options.map((opt, i) => {
                 const isSelected = selectedOption === opt.id;
-                const isCorrectOpt = confirmed && opt.id === correctOptionId;
-                const isWrongSelection = confirmed && isSelected && opt.id !== correctOptionId;
-
                 let optClass = 'border-border bg-card hover:border-primary/30';
                 let letterClass = 'bg-secondary text-foreground';
 
-                if (confirmed) {
-                  if (isCorrectOpt) {
-                    optClass = 'border-saris-success bg-saris-success/10 ring-2 ring-saris-success/20';
-                    letterClass = 'bg-saris-success text-primary-foreground';
-                  } else if (isWrongSelection) {
-                    optClass = 'border-saris-danger bg-saris-danger/10 ring-2 ring-saris-danger/20';
-                    letterClass = 'bg-saris-danger text-primary-foreground';
-                  }
-                } else if (isSelected) {
+                if (isSelected) {
                   optClass = 'border-primary bg-primary/5 ring-2 ring-primary/20';
                   letterClass = 'bg-primary text-primary-foreground';
                 }
@@ -339,8 +494,7 @@ export default function ExamSession() {
                 return (
                   <button
                     key={opt.id}
-                    onClick={() => !confirmed && setSelectedOption(opt.id)}
-                    disabled={confirmed}
+                    onClick={() => selectOption(opt.id)}
                     className={`w-full flex items-center gap-3 border rounded-xl px-3 py-3 transition-all min-h-[44px] ${optClass}`}
                     aria-selected={isSelected}
                   >
@@ -348,8 +502,6 @@ export default function ExamSession() {
                       {arabicLetters[i]}
                     </div>
                     <span className="font-tajawal font-medium text-sm text-foreground flex-1 text-right">{opt.textAr}</span>
-                    {isCorrectOpt && <CheckCircle2 className="w-5 h-5 text-saris-success flex-shrink-0" />}
-                    {isWrongSelection && <XCircle className="w-5 h-5 text-saris-danger flex-shrink-0" />}
                   </button>
                 );
               })}
@@ -357,19 +509,27 @@ export default function ExamSession() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Hint Button (only for hard questions) */}
-        {isHardQuestion && !confirmed && (
+        {/* Smart Hint - only for HARD questions */}
+        {isHard && (
           <div>
-            {!showHint && hintAvailable && (
+            {!questionHint && canUseHint && (
               <button
-                onClick={() => { setShowHint(true); setHintUsedForQuestion(true); }}
-                className="flex items-center gap-2 font-tajawal text-xs text-saris-warning border border-saris-warning/30 rounded-xl px-3 py-2 hover:bg-saris-warning/5 transition-colors"
+                onClick={useHint}
+                className="flex items-center gap-2 font-tajawal text-xs text-saris-warning border border-saris-warning/30 rounded-xl px-3 py-2.5 hover:bg-saris-warning/5 transition-colors"
               >
                 <Lightbulb className="w-4 h-4" />
-                تلميح (للأسئلة الصعبة فقط)
+                <span>💡 تلميح</span>
+                <span className="mr-auto font-inter text-[10px] text-muted-foreground">
+                  {usedHintCount}/{maxHints}
+                </span>
               </button>
             )}
-            {showHint && mockHints[currentQuestion.id] && (
+            {!questionHint && !canUseHint && usedHintCount >= maxHints && (
+              <p className="font-tajawal text-[11px] text-muted-foreground text-center py-1">
+                لقد استخدمت جميع التلميحات المتاحة في هذه الجلسة
+              </p>
+            )}
+            {questionHint && (
               <motion.div
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -377,45 +537,43 @@ export default function ExamSession() {
               >
                 <div className="flex items-start gap-2">
                   <Lightbulb className="w-4 h-4 text-saris-warning flex-shrink-0 mt-0.5" />
-                  <p className="font-tajawal text-xs text-foreground leading-relaxed">{mockHints[currentQuestion.id]}</p>
+                  <p className="font-tajawal text-xs text-foreground leading-relaxed">{questionHint}</p>
                 </div>
               </motion.div>
             )}
           </div>
         )}
 
-        {/* Feedback */}
-        <AnimatePresence>
-          {confirmed && feedbackCorrect !== null && (
-            <motion.div
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className={`rounded-xl px-4 py-3 border ${feedbackCorrect ? 'bg-saris-success/10 text-saris-success border-saris-success/20' : 'bg-saris-danger/10 text-saris-danger border-saris-danger/20'}`}
-              aria-live="polite"
+        {/* Navigation Buttons */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={goPrev}
+            disabled={currentIndex === 0}
+            className="flex-1 flex items-center justify-center gap-1 border border-border bg-card text-foreground font-tajawal font-bold text-sm rounded-xl h-11 disabled:opacity-40 disabled:cursor-not-allowed transition-colors hover:bg-secondary"
+          >
+            <ChevronRight className="w-4 h-4" />
+            السابق
+          </button>
+          {currentIndex < maxQ - 1 ? (
+            <button
+              onClick={goNext}
+              className="flex-1 flex items-center justify-center gap-1 gradient-primary text-primary-foreground font-tajawal font-bold text-sm rounded-xl h-11"
             >
-              <p className="font-tajawal font-bold text-sm">{feedbackCorrect ? '✅ إجابة صحيحة!' : '❌ إجابة خاطئة'}</p>
-            </motion.div>
+              التالي
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          ) : (
+            <button
+              onClick={handleFinish}
+              className="flex-1 flex items-center justify-center gap-1 gradient-primary text-primary-foreground font-tajawal font-bold text-sm rounded-xl h-11"
+            >
+              إنهاء المحاكاة
+            </button>
           )}
-        </AnimatePresence>
+        </div>
 
-        {/* Confirm Button */}
-        <AnimatePresence>
-          {selectedOption && !confirmed && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <button
-                onClick={handleConfirm}
-                className="w-full gradient-primary text-primary-foreground font-tajawal font-bold text-base rounded-xl h-12 flex items-center justify-center gap-2"
-              >
-                تأكيد الإجابة
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Exam conditions notice (shown at start) */}
-        {answers.length === 0 && !confirmed && (
+        {/* Exam conditions notice */}
+        {answeredCount === 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -424,7 +582,7 @@ export default function ExamSession() {
             <div className="flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-saris-warning flex-shrink-0 mt-0.5" />
               <p className="font-tajawal text-[11px] text-muted-foreground leading-relaxed">
-                المحاكاة تحاكي ظروف الاختبار الحقيقي: مؤقت تنازلي، لا مدرب ذكي، تلميحات محدودة للأسئلة الصعبة فقط
+                المحاكاة تحاكي ظروف الاختبار الحقيقي: مؤقت تنازلي، بدون مدرب ذكي، يمكنك التنقل بين الأسئلة ومراجعتها قبل الإنهاء
               </p>
             </div>
           </motion.div>
