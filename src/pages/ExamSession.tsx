@@ -7,25 +7,19 @@ import {
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import SimulationSummary from '@/components/simulation/SimulationSummary';
-import { mockQuestionPool, mockAnswerKeys, type MockQuestion } from '@/data/mock-questions';
+import type { MockQuestion } from '@/data/mock-questions';
+import {
+  fetchSession,
+  requestHint,
+  finishSession,
+  getSimulationResults,
+  type ExamSession as ExamSessionData,
+  type SimulationResults,
+} from '@/services/examService';
 
 type Phase = 'loading' | 'error' | 'active' | 'confirm_finish' | 'submitting' | 'results' | 'time_up';
 
 const arabicLetters = ['أ', 'ب', 'ج', 'د'];
-
-// Mock hints for hard questions
-const mockHints: Record<string, string> = {
-  q23: 'تذكّر أن |a| < b يعني -b < a < b. طبّق هذه القاعدة على 2x - 3',
-  q24: 'استخدم التوزيع الاحتمالي ذي الحدين. عدد المحاولات = 3، احتمال النجاح = 0.5',
-  q25: 'المسافة = السرعة × الزمن. اقسم المسافة على السرعة',
-  q26: 'ضع عمر سعد = x، عمر أحمد = x + 5. بعد 3 سنوات: (x+5+3) = 2(x+3)',
-  q27: 'محدد المصفوفة 2×2: ad - bc. طبّق على [[1,2],[3,4]]',
-  q28: 'رتّب المتسابقين حسب المعطيات: خالد قبل سعد، فهد قبل سعد وقبل ناصر',
-  q29: 'عدد طرق ترتيب r من n = P(n,r) = n!/(n-r)!',
-  q30: '20% من العدد = 45، إذاً العدد = 45 / 0.20',
-};
-
-const TOTAL_TIME_SECONDS = 15 * 60;
 
 interface SimAnswer {
   questionId: string;
@@ -44,46 +38,34 @@ interface SectionInfo {
   questionIndices: number[];
 }
 
-// Build simulation pool: 15 questions in section order
-function buildSimulationPool(): MockQuestion[] {
-  const pool = [...mockQuestionPool];
-  const easy = pool.filter(q => q.difficulty === 'easy').sort(() => Math.random() - 0.5).slice(0, 4);
-  const medium = pool.filter(q => q.difficulty === 'medium').sort(() => Math.random() - 0.5).slice(0, 7);
-  const hard = pool.filter(q => q.difficulty === 'hard').sort(() => Math.random() - 0.5).slice(0, 4);
-  // Group by section for ordered presentation
-  const all = [...easy, ...medium, ...hard];
-  const sectionOrder = ['sec_alg', 'sec_stats', 'sec_calc', 'sec_logic'];
-  const sorted: MockQuestion[] = [];
-  for (const sec of sectionOrder) {
-    sorted.push(...all.filter(q => q.sectionId === sec));
-  }
-  return sorted;
-}
-
 export default function ExamSession() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
 
   const [phase, setPhase] = useState<Phase>('loading');
+  const [session, setSession] = useState<ExamSessionData | null>(null);
   const [questions, setQuestions] = useState<MockQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<number, SimAnswer>>({});
-  const [remainingSeconds, setRemainingSeconds] = useState(TOTAL_TIME_SECONDS);
+  const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [showQuestionGrid, setShowQuestionGrid] = useState(false);
-  const [hintsUsed, setHintsUsed] = useState<Record<string, string>>({}); // questionId -> hint text
+  const [hintsUsed, setHintsUsed] = useState<Record<string, string>>({});
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+  const [simulationResults, setSimulationResults] = useState<SimulationResults | null>(null);
 
-  // Loading
+  // ── Fetch session from service layer ──
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!sessionId) { setPhase('error'); return; }
-      const pool = buildSimulationPool();
-      if (pool.length === 0) { setPhase('error'); return; }
-      setQuestions(pool);
-      if (pool.length > 0) setActiveSectionId(pool[0].sectionId);
-      setPhase('active');
-    }, 500);
-    return () => clearTimeout(timer);
+    if (!sessionId) { setPhase('error'); return; }
+
+    fetchSession(sessionId, 'simulation')
+      .then(data => {
+        setSession(data);
+        setQuestions(data.questions);
+        setRemainingSeconds(data.totalTimeSeconds);
+        if (data.questions.length > 0) setActiveSectionId(data.questions[0].sectionId);
+        setPhase('active');
+      })
+      .catch(() => setPhase('error'));
   }, [sessionId]);
 
   // Countdown timer
@@ -106,7 +88,7 @@ export default function ExamSession() {
   useEffect(() => {
     if (phase === 'time_up') {
       setTimeout(() => setPhase('submitting'), 2000);
-      setTimeout(() => setPhase('results'), 3500);
+      setTimeout(() => handleComputeResults(), 3500);
     }
   }, [phase]);
 
@@ -122,7 +104,7 @@ export default function ExamSession() {
     return Array.from(map.values());
   }, [questions]);
 
-  // Hard questions count for hint limit
+  const totalTimeSeconds = session?.totalTimeSeconds ?? 15 * 60;
   const maxHints = useMemo(() => questions.filter(q => q.difficulty === 'hard').length, [questions]);
   const usedHintCount = Object.keys(hintsUsed).length;
 
@@ -170,11 +152,14 @@ export default function ExamSession() {
     }));
   }, [currentIndex, currentQuestion]);
 
-  const useHint = useCallback(() => {
-    if (!currentQuestion || !canUseHint) return;
-    const hintText = mockHints[currentQuestion.id] || 'حاول التفكير في المسألة بطريقة مختلفة وراجع القوانين الأساسية المتعلقة بالموضوع.';
-    setHintsUsed(prev => ({ ...prev, [currentQuestion.id]: hintText }));
-  }, [currentQuestion, canUseHint]);
+  // ── Request hint via service layer ──
+  const useHint = useCallback(async () => {
+    if (!currentQuestion || !canUseHint || !session) return;
+    const response = await requestHint(session.id, currentQuestion.id, currentQuestion.difficulty);
+    if (response.eligible && response.hintText) {
+      setHintsUsed(prev => ({ ...prev, [currentQuestion.id]: response.hintText! }));
+    }
+  }, [currentQuestion, canUseHint, session]);
 
   const goToQuestion = useCallback((index: number) => {
     setCurrentIndex(index);
@@ -203,10 +188,20 @@ export default function ExamSession() {
     setPhase('confirm_finish');
   }, []);
 
+  // ── Finish + compute results via service layer ──
+  const handleComputeResults = useCallback(async () => {
+    if (!session) return;
+    await finishSession(session.id);
+    const elapsed = totalTimeSeconds - remainingSeconds;
+    const results = await getSimulationResults(questions, answers, elapsed, hintsUsed);
+    setSimulationResults(results);
+    setPhase('results');
+  }, [session, questions, answers, remainingSeconds, hintsUsed, totalTimeSeconds]);
+
   const confirmFinish = useCallback(() => {
     setPhase('submitting');
-    setTimeout(() => setPhase('results'), 1500);
-  }, []);
+    handleComputeResults();
+  }, [handleComputeResults]);
 
   const formatTime = (s: number) => {
     const mins = Math.floor(s / 60);
@@ -304,27 +299,14 @@ export default function ExamSession() {
   }
 
   // ── RESULTS ──
-  if (phase === 'results') {
-    // Build results-compatible answers
-    const simAnswers = questions.map((q, i) => ({
-      questionId: q.id,
-      selectedOptionId: answers[i]?.selectedOptionId ?? null,
-      correctOptionId: mockAnswerKeys[q.id],
-      isCorrect: answers[i]?.selectedOptionId === mockAnswerKeys[q.id],
-      difficulty: q.difficulty,
-      sectionId: q.sectionId,
-      sectionName: q.sectionName,
-      topic: q.topic,
-      usedHint: !!hintsUsed[q.id],
-      flagged: answers[i]?.flagged ?? false,
-    }));
+  if (phase === 'results' && simulationResults) {
     return (
       <SimulationSummary
-        answers={simAnswers}
+        answers={simulationResults.answers}
         questions={questions}
-        totalQuestions={questions.length}
-        totalTimeSeconds={TOTAL_TIME_SECONDS - remainingSeconds}
-        hintsUsed={hintsUsed}
+        totalQuestions={simulationResults.totalQuestions}
+        totalTimeSeconds={simulationResults.totalTimeSeconds}
+        hintsUsed={simulationResults.hintsUsed}
       />
     );
   }
@@ -460,7 +442,7 @@ export default function ExamSession() {
           )}
         </AnimatePresence>
 
-        {/* Question Card - NO difficulty badge shown */}
+        {/* Question Card */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id}
@@ -479,7 +461,6 @@ export default function ExamSession() {
               </p>
             </div>
 
-            {/* Options - NO correct/wrong feedback during exam */}
             <div className="space-y-2">
               {currentQuestion.options.map((opt, i) => {
                 const isSelected = selectedOption === opt.id;
@@ -509,7 +490,7 @@ export default function ExamSession() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Smart Hint - only for HARD questions */}
+        {/* Smart Hint — eligibility from service layer */}
         {isHard && (
           <div>
             {!questionHint && canUseHint && (

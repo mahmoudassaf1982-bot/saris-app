@@ -9,11 +9,16 @@ import { Progress } from '@/components/ui/progress';
 import TrainingCoach from '@/components/training/TrainingCoach';
 import SmartSessionSummary from '@/components/training/SmartSessionSummary';
 import FirstSessionCelebration from '@/components/training/FirstSessionCelebration';
-import {
-  createInitialState, selectNextQuestion, processAnswer, getSessionResults,
-  type STESessionState,
-} from '@/services/smartTrainingEngine';
 import type { MockQuestion } from '@/data/mock-questions';
+import type { STESessionState } from '@/services/smartTrainingEngine';
+import {
+  fetchSession,
+  submitAnswer,
+  getNextQuestion,
+  finishSession,
+  getAdaptiveResults,
+  type AdaptiveResults,
+} from '@/services/examService';
 
 type Phase = 'loading' | 'error' | 'active' | 'submitting' | 'results' | 'first_celebration';
 
@@ -39,29 +44,21 @@ export default function AdaptiveTraining() {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [questionSeconds, setQuestionSeconds] = useState(0);
   const [lastAnswerCorrect, setLastAnswerCorrect] = useState<boolean | null>(null);
+  const [results, setResults] = useState<AdaptiveResults | null>(null);
   const [isFirstSession] = useState(() => !localStorage.getItem('saris_first_session_done'));
 
-  // Loading phase
+  // ── Fetch session from service layer ──
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!sessionId) {
-        setPhase('error');
-        return;
-      }
-      const initial = createInitialState(55, 15);
-      const firstQ = selectNextQuestion(initial);
-      if (!firstQ) {
-        setPhase('error');
-        return;
-      }
-      initial.questionsServed = [firstQ];
-      initial.difficultyProgression = [];
-      initial.questionStartTime = Date.now();
-      setSteState(initial);
-      setCurrentQuestion(firstQ);
-      setPhase('active');
-    }, 500);
-    return () => clearTimeout(timer);
+    if (!sessionId) { setPhase('error'); return; }
+
+    fetchSession(sessionId, 'adaptive_training')
+      .then(data => {
+        const state = (data as any)._steState as STESessionState;
+        setSteState(state);
+        setCurrentQuestion(data.questions[0]);
+        setPhase('active');
+      })
+      .catch(() => setPhase('error'));
   }, [sessionId]);
 
   // Timers
@@ -74,42 +71,53 @@ export default function AdaptiveTraining() {
     return () => clearInterval(interval);
   }, [phase]);
 
-  const handleConfirm = useCallback(() => {
-    if (!selectedOption || !steState || !currentQuestion) return;
+  // ── Submit answer via service layer ──
+  const handleConfirm = useCallback(async () => {
+    if (!selectedOption || !steState || !currentQuestion || !sessionId) return;
     setConfirmed(true);
 
-    const newState = processAnswer(steState, currentQuestion.id, selectedOption);
-    const lastAnswer = newState.answers[newState.answers.length - 1];
-    setFeedbackCorrect(lastAnswer.isCorrect);
-    setCorrectOptionId(lastAnswer.correctOptionId);
-    setLastAnswerCorrect(lastAnswer.isCorrect);
+    const response = await submitAnswer({
+      sessionId,
+      questionId: currentQuestion.id,
+      selectedOptionId: selectedOption,
+      steState,
+    });
 
-    setTimeout(() => {
+    setFeedbackCorrect(response.isCorrect);
+    setCorrectOptionId(response.correctOptionId);
+    setLastAnswerCorrect(response.isCorrect);
+
+    const newState = response.adaptiveState!;
+
+    setTimeout(async () => {
       if (newState.isComplete) {
         setSteState(newState);
         setPhase('submitting');
-        setTimeout(() => {
-          if (isFirstSession) {
-            localStorage.setItem('saris_first_session_done', 'true');
-            setPhase('first_celebration');
-          } else {
-            setPhase('results');
-          }
-        }, 1500);
+        await finishSession(sessionId);
+        const res = await getAdaptiveResults(newState);
+        setResults(res);
+        if (isFirstSession) {
+          localStorage.setItem('saris_first_session_done', 'true');
+          setPhase('first_celebration');
+        } else {
+          setPhase('results');
+        }
         return;
       }
 
-      const nextQ = selectNextQuestion(newState);
+      // ── Get next question via service layer ──
+      const { question: nextQ, updatedState } = await getNextQuestion(newState);
       if (!nextQ) {
         setSteState(newState);
         setPhase('submitting');
-        setTimeout(() => setPhase('results'), 1500);
+        await finishSession(sessionId);
+        const res = await getAdaptiveResults(newState);
+        setResults(res);
+        setPhase('results');
         return;
       }
 
-      newState.questionsServed = [...newState.questionsServed, nextQ];
-      newState.questionStartTime = Date.now();
-      setSteState(newState);
+      setSteState(updatedState);
       setCurrentQuestion(nextQ);
       setSelectedOption(null);
       setConfirmed(false);
@@ -117,12 +125,11 @@ export default function AdaptiveTraining() {
       setCorrectOptionId(null);
       setQuestionSeconds(0);
     }, 1200);
-  }, [selectedOption, steState, currentQuestion, isFirstSession]);
+  }, [selectedOption, steState, currentQuestion, isFirstSession, sessionId]);
 
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
   const questionNum = steState ? steState.answers.length + (phase === 'active' ? 1 : 0) : 0;
   const maxQ = steState?.maxQuestions || 15;
-  const results = steState ? getSessionResults(steState) : null;
 
   // LOADING
   if (phase === 'loading') {
