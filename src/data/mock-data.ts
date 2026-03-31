@@ -197,6 +197,26 @@ export const mockPredictedScore = {
   strongSections: ["الجبر والهندسة"],
 };
 
+export const mockGamification = {
+  streak: 5,
+  dailyGoals: [
+    { label: "أكمل جلسة تدريب واحدة", completed: true, progress: 100 },
+    { label: "أجب على 20 سؤالاً", completed: true, progress: 100 },
+    { label: "حقق دقة 70%+ في جلسة", completed: false, progress: 45 },
+  ],
+  badges: [
+    { id: "b1", name: "البداية", description: "أكمل أول جلسة", icon: "🚀", tier: "bronze" as const, unlocked: true, category: "streak" },
+    { id: "b2", name: "نجم الدقة", description: "حقق 90%+ في جلسة", icon: "⭐", tier: "gold" as const, unlocked: true, category: "performance" },
+    { id: "b3", name: "100 سؤال", description: "أجب على 100 سؤال", icon: "💯", tier: "silver" as const, unlocked: true, category: "milestone" },
+    { id: "b4", name: "مثابر", description: "7 أيام متتالية", icon: "🔥", tier: "silver" as const, unlocked: false, category: "streak" },
+    { id: "b5", name: "لا يتوقف", description: "30 يومًا متتاليًا", icon: "💪", tier: "gold" as const, unlocked: false, category: "streak" },
+    { id: "b6", name: "سريع البديهة", description: "10 إجابات صحيحة متتالية", icon: "⚡", tier: "silver" as const, unlocked: false, category: "performance" },
+    { id: "b7", name: "قاهر الصعب", description: "5 أسئلة صعبة صحيحة", icon: "🏆", tier: "gold" as const, unlocked: false, category: "performance" },
+    { id: "b8", name: "500 سؤال", description: "أجب على 500 سؤال", icon: "📚", tier: "gold" as const, unlocked: false, category: "milestone" },
+    { id: "b9", name: "خبير", description: "80%+ في جميع الأقسام", icon: "👑", tier: "gold" as const, unlocked: false, category: "milestone" },
+  ],
+};
+
 export const mockReferralStats = {
   totalReferrals: 3,
   pointsEarned: 75,
