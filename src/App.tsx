@@ -48,7 +48,7 @@ const App = () => (
             <Route path="history" element={<History />} />
             <Route path="referral" element={<Referral />} />
             <Route path="adaptive-training/:sessionId" element={<AdaptiveTraining />} />
-            <Route path="exam-session/:sessionId" element={<ExamSessionPage />} />
+            <Route path="exam-session/:sessionId" element={<ExamSession />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
