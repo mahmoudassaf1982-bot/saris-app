@@ -18,7 +18,7 @@ import Referral from "./pages/Referral";
 import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
 import AdaptiveTraining from "./pages/AdaptiveTraining";
-import { ExamSessionPage } from "./pages/StubPages";
+import ExamSession from "./pages/ExamSession";
 
 const queryClient = new QueryClient();
 
