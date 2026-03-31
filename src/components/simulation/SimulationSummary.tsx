@@ -1,47 +1,46 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Target, TrendingUp, TrendingDown, CheckCircle, XCircle, Zap, BarChart3, Home, Clock } from 'lucide-react';
+import {
+  Trophy, Target, TrendingUp, Zap, BarChart3, Home, Clock,
+  CheckCircle2, XCircle, Layers, ChevronDown, ChevronUp, Lightbulb, Eye,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Progress } from '@/components/ui/progress';
+import type { MockQuestion } from '@/data/mock-questions';
+import ExamReview from './ExamReview';
 
 interface SimAnswer {
   questionId: string;
-  selectedOptionId: string;
+  selectedOptionId: string | null;
   correctOptionId: string;
   isCorrect: boolean;
-  responseTimeMs: number;
   difficulty: string;
   sectionId: string;
   sectionName: string;
   topic: string;
   usedHint: boolean;
+  flagged: boolean;
 }
 
 interface SimulationSummaryProps {
   answers: SimAnswer[];
+  questions: MockQuestion[];
   totalQuestions: number;
   totalTimeSeconds: number;
+  hintsUsed: Record<string, string>;
 }
 
-const difficultyColor: Record<string, string> = {
-  easy: 'bg-saris-success',
-  medium: 'bg-saris-warning',
-  hard: 'bg-saris-danger',
-};
-
-export default function SimulationSummary({ answers, totalQuestions, totalTimeSeconds }: SimulationSummaryProps) {
+export default function SimulationSummary({ answers, questions, totalQuestions, totalTimeSeconds, hintsUsed }: SimulationSummaryProps) {
   const navigate = useNavigate();
+  const [showReview, setShowReview] = useState(false);
 
   const correctCount = answers.filter(a => a.isCorrect).length;
   const scorePercent = Math.round((correctCount / Math.max(totalQuestions, 1)) * 100);
   const isGood = scorePercent >= 60;
   const scoreColor = scorePercent >= 70 ? 'text-saris-success' : scorePercent >= 45 ? 'text-saris-warning' : 'text-saris-danger';
 
-  // Speed rating
-  const avgTimeMs = answers.length > 0 ? answers.reduce((s, a) => s + a.responseTimeMs, 0) / answers.length : 0;
-  const avgTimeSec = Math.round(avgTimeMs / 1000);
+  const avgTimeSec = totalQuestions > 0 ? Math.round(totalTimeSeconds / totalQuestions) : 0;
   const speedRating = avgTimeSec < 25 ? 'سريع' : avgTimeSec < 45 ? 'متوسط' : 'بطيء';
-
-  // Accuracy rating
   const accuracyRating = scorePercent >= 80 ? 'ممتاز' : scorePercent >= 60 ? 'جيد' : scorePercent >= 40 ? 'متوسط' : 'يحتاج تحسين';
 
   // Section performance
@@ -60,7 +59,7 @@ export default function SimulationSummary({ answers, totalQuestions, totalTimeSe
     if (a.isCorrect) diffMap[a.difficulty].correct++;
   }
 
-  // Weak/strong topics
+  // Topics
   const topicMap: Record<string, { correct: number; total: number }> = {};
   for (const a of answers) {
     if (!topicMap[a.topic]) topicMap[a.topic] = { correct: 0, total: 0 };
@@ -70,9 +69,12 @@ export default function SimulationSummary({ answers, totalQuestions, totalTimeSe
   const weakTopics = Object.entries(topicMap).filter(([, p]) => p.total >= 2 && p.correct / p.total < 0.5).map(([t]) => t);
   const strongTopics = Object.entries(topicMap).filter(([, p]) => p.total >= 2 && p.correct / p.total >= 0.7).map(([t]) => t);
 
-  const hintsUsed = answers.filter(a => a.usedHint).length;
-
+  const hintCount = Object.keys(hintsUsed).length;
   const formatTime = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+
+  if (showReview) {
+    return <ExamReview answers={answers} questions={questions} hintsUsed={hintsUsed} onBack={() => setShowReview(false)} />;
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen bg-background px-4 py-6 pb-10">
@@ -82,19 +84,24 @@ export default function SimulationSummary({ answers, totalQuestions, totalTimeSe
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
-          className="bg-card rounded-2xl border border-border p-6 shadow-card text-center"
+          className="bg-card rounded-2xl border border-border p-6 shadow-[var(--shadow-card)] text-center"
         >
           {isGood ? (
-            <Trophy className="w-12 h-12 text-saris-success mx-auto mb-3" />
+            <>
+              <Trophy className="w-12 h-12 text-saris-success mx-auto mb-3" />
+              <p className="font-tajawal font-bold text-lg text-foreground mb-1">مبروك! اجتزت الاختبار 🎉</p>
+            </>
           ) : (
-            <Target className="w-12 h-12 text-saris-danger mx-auto mb-3" />
+            <>
+              <Target className="w-12 h-12 text-destructive mx-auto mb-3" />
+              <p className="font-tajawal font-bold text-lg text-foreground mb-1">لم تجتز الاختبار</p>
+            </>
           )}
-          <p className="font-tajawal text-sm text-muted-foreground mb-2">نتيجة المحاكاة الرسمية</p>
-          <p className={`font-inter font-black text-4xl ${scoreColor}`}>
-            {scorePercent}<span className="text-lg text-muted-foreground">%</span>
+          <p className={`font-inter font-black text-5xl ${scoreColor}`}>
+            {scorePercent}<span className="text-xl text-muted-foreground">%</span>
           </p>
-          <p className="font-tajawal text-xs text-muted-foreground mt-1">{correctCount} من {totalQuestions} إجابة صحيحة</p>
-          <div className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-saris-purple/10 text-saris-purple">
+          <p className="font-tajawal text-sm text-muted-foreground mt-1">{correctCount} من {totalQuestions} إجابة صحيحة</p>
+          <div className="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-full text-[10px] font-bold bg-saris-purple/10 text-saris-purple">
             ×3 وزن التأثير على درجتك المتوقعة
           </div>
         </motion.div>
@@ -104,15 +111,15 @@ export default function SimulationSummary({ answers, totalQuestions, totalTimeSe
           {[
             { label: 'الدقة', value: `${scorePercent}%`, sub: accuracyRating, icon: BarChart3, color: 'text-saris-info' },
             { label: 'السرعة', value: `${avgTimeSec}ث`, sub: speedRating, icon: Zap, color: 'text-saris-warning' },
-            { label: 'الوقت الكلي', value: formatTime(totalTimeSeconds), sub: '', icon: Clock, color: 'text-saris-navy' },
-            { label: 'تلميحات مستخدمة', value: `${hintsUsed}`, sub: '', icon: CheckCircle, color: 'text-saris-purple' },
+            { label: 'الوقت الكلي', value: formatTime(totalTimeSeconds), sub: '', icon: Clock, color: 'text-primary' },
+            { label: 'تلميحات', value: `${hintCount}`, sub: '', icon: Lightbulb, color: 'text-saris-purple' },
           ].map((stat, i) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 + i * 0.05 }}
-              className="bg-card rounded-xl border border-border p-3 shadow-card"
+              className="bg-card rounded-xl border border-border p-3 shadow-[var(--shadow-card)]"
             >
               <stat.icon className={`w-5 h-5 ${stat.color} mb-1.5`} />
               <p className="font-tajawal text-xs text-muted-foreground">{stat.label}</p>
@@ -127,11 +134,14 @@ export default function SimulationSummary({ answers, totalQuestions, totalTimeSe
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.35 }}
-          className="bg-card rounded-xl border border-border p-4 shadow-card"
+          className="bg-card rounded-xl border border-border p-4 shadow-[var(--shadow-card)]"
         >
-          <h3 className="font-tajawal font-bold text-sm text-foreground mb-3">أداء الأقسام</h3>
+          <div className="flex items-center gap-2 mb-3">
+            <Layers className="w-4 h-4 text-primary" />
+            <h3 className="font-tajawal font-bold text-sm text-foreground">نتائج الأقسام</h3>
+          </div>
           <div className="space-y-3">
-            {sections.map((sec) => {
+            {sections.map(sec => {
               const rate = Math.round((sec.correct / sec.total) * 100);
               const barColor = rate >= 70 ? 'bg-saris-success' : rate >= 45 ? 'bg-saris-warning' : 'bg-saris-danger';
               return (
@@ -159,7 +169,7 @@ export default function SimulationSummary({ answers, totalQuestions, totalTimeSe
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
-          className="bg-card rounded-xl border border-border p-4 shadow-card"
+          className="bg-card rounded-xl border border-border p-4 shadow-[var(--shadow-card)]"
         >
           <h3 className="font-tajawal font-bold text-sm text-foreground mb-3">توزيع الصعوبة</h3>
           <div className="flex items-end gap-3 justify-center h-20">
@@ -194,7 +204,7 @@ export default function SimulationSummary({ answers, totalQuestions, totalTimeSe
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55 }}
-            className="bg-card rounded-xl border border-border p-4 shadow-card space-y-3"
+            className="bg-card rounded-xl border border-border p-4 shadow-[var(--shadow-card)] space-y-3"
           >
             {strongTopics.length > 0 && (
               <div>
@@ -229,8 +239,9 @@ export default function SimulationSummary({ answers, totalQuestions, totalTimeSe
           <button onClick={() => navigate('/app/exams')} className="w-full gradient-primary text-primary-foreground font-tajawal font-bold text-base rounded-xl h-12">
             العودة للاختبارات
           </button>
-          <button onClick={() => navigate('/app/performance')} className="w-full border border-border bg-card text-foreground font-tajawal font-bold text-sm rounded-xl h-10">
-            عرض ملف الأداء
+          <button onClick={() => setShowReview(true)} className="w-full flex items-center justify-center gap-2 border border-border bg-card text-foreground font-tajawal font-bold text-sm rounded-xl h-10">
+            <Eye className="w-4 h-4" />
+            مراجعة الإجابات
           </button>
           <button onClick={() => navigate('/app')} className="w-full text-muted-foreground font-tajawal text-sm rounded-xl h-10 flex items-center justify-center gap-1">
             <Home className="w-4 h-4" /> العودة للرئيسية
