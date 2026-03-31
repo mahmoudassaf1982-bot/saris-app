@@ -2,8 +2,13 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Globe } from "lucide-react";
-import { mockCountries } from "@/data/mock-data";
 import { useToast } from "@/hooks/use-toast";
+
+const countries = [
+  { id: "kw", name: "الكويت", flag: "🇰🇼", exams: "اختبار القدرات الأكاديمية" },
+  { id: "sa", name: "السعودية", flag: "🇸🇦", exams: "قدرات، تحصيلي" },
+  { id: "jo", name: "الأردن", flag: "🇯🇴", exams: "التوجيهي" },
+];
 
 const ChooseCountry = () => {
   const navigate = useNavigate();
@@ -15,7 +20,7 @@ const ChooseCountry = () => {
       toast({ title: "خطأ", description: "يرجى اختيار الدولة", variant: "destructive" });
       return;
     }
-    navigate("/welcome");
+    navigate("/complete-profile", { state: { country: selected } });
   };
 
   return (
@@ -25,9 +30,8 @@ const ChooseCountry = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full bg-saris-bg-card rounded-2xl p-6 shadow-card"
       >
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-lg gradient-gold flex items-center justify-center">
+        <div className="flex items-center justify-center mb-5">
+          <div className="w-12 h-12 rounded-xl gradient-gold flex items-center justify-center">
             <span className="font-tajawal font-black text-xl text-saris-navy">S</span>
           </div>
         </div>
@@ -36,28 +40,30 @@ const ChooseCountry = () => {
           <Globe className="w-7 h-7 text-saris-navy" />
         </div>
 
-        <h1 className="font-tajawal font-bold text-xl text-saris-text text-center mb-1">اختر دولتك</h1>
-        <p className="font-tajawal text-sm text-saris-text-2 text-center mb-6">سيتم عرض الاختبارات المتوفرة حسب دولتك</p>
+        <h1 className="font-tajawal font-bold text-xl text-saris-text text-center mb-1">اختر بلدك</h1>
+        <p className="font-tajawal text-sm text-saris-text-2 text-center mb-6">سيتم عرض الاختبارات المتوفرة حسب بلدك</p>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {mockCountries.map((country) => (
+        <div className="space-y-3 mb-6">
+          {countries.map((country) => (
             <button
               key={country.id}
               onClick={() => setSelected(country.id)}
-              className={`flex flex-col items-center gap-1.5 py-4 rounded-xl border transition-all ${
+              className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all text-right ${
                 selected === country.id
-                  ? "border-saris-navy bg-saris-navy/5 shadow-sm"
+                  ? "border-saris-navy bg-saris-navy/5 shadow-sm ring-1 ring-saris-navy/20"
                   : "border-saris-border hover:border-saris-navy/30"
               }`}
-              aria-label={`اختر ${country.name}`}
             >
-              <span className="text-3xl">{country.flag}</span>
-              <span className="font-tajawal text-sm font-semibold text-saris-text">{country.name}</span>
+              <span className="text-4xl">{country.flag}</span>
+              <div className="flex-1">
+                <p className="font-tajawal font-bold text-base text-saris-text">{country.name}</p>
+                <p className="font-tajawal text-xs text-saris-text-3 mt-0.5">{country.exams}</p>
+              </div>
             </button>
           ))}
         </div>
 
-        <p className="font-tajawal text-xs text-saris-warning text-center mb-4">⚠️ لا يمكن تغيير الدولة لاحقًا</p>
+        <p className="font-tajawal text-xs text-saris-warning text-center mb-4">⚠️ لا يمكن تغيير البلد لاحقًا</p>
 
         <button
           onClick={handleConfirm}

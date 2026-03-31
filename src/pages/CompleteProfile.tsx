@@ -1,28 +1,38 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { UserCircle, Phone } from "lucide-react";
-import { mockCountries } from "@/data/mock-data";
+import { useNavigate, useLocation } from "react-router-dom";
+import { UserCircle, GraduationCap, Target, BookOpen } from "lucide-react";
 
-const countryCodes: Record<string, { code: string; flag: string }> = {
-  kw: { code: "+965", flag: "🇰🇼" },
-  sa: { code: "+966", flag: "🇸🇦" },
-  tr: { code: "+90", flag: "🇹🇷" },
-  qa: { code: "+974", flag: "🇶🇦" },
+const examsByCountry: Record<string, string[]> = {
+  kw: ["اختبار القدرات الأكاديمية"],
+  sa: ["اختبار القدرات العامة (قدرات)", "اختبار التحصيلي"],
+  jo: ["اختبار الثانوية العامة (التوجيهي)"],
 };
+
+const grades = [
+  "الصف العاشر",
+  "الصف الحادي عشر",
+  "الصف الثاني عشر",
+  "خريج ثانوية",
+  "طالب جامعي",
+];
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const countryId = (location.state as any)?.country || "kw";
+
   const [firstName, setFirstName] = useState("أحمد");
   const [lastName, setLastName] = useState("محمد");
-  const [countryId, setCountryId] = useState("kw");
-  const [phone, setPhone] = useState("");
+  const [grade, setGrade] = useState("");
+  const [targetExam, setTargetExam] = useState("");
+  const [targetScore, setTargetScore] = useState("");
 
-  const cc = countryCodes[countryId] || countryCodes.kw;
-  const canSubmit = firstName.trim() && lastName.trim() && countryId && phone.trim();
+  const exams = examsByCountry[countryId] || examsByCountry.kw;
+  const canSubmit = firstName.trim() && lastName.trim() && grade && targetExam;
 
   return (
-    <div className="min-h-screen bg-saris-bg flex items-center justify-center px-4">
+    <div className="min-h-screen bg-saris-bg flex items-center justify-center px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -32,13 +42,14 @@ const CompleteProfile = () => {
           <UserCircle className="w-7 h-7 text-saris-navy" />
         </div>
 
-        <h1 className="font-tajawal font-bold text-xl text-saris-text text-center mb-1">أكمل بياناتك</h1>
-        <p className="font-tajawal text-sm text-saris-text-2 text-center mb-6">نحتاج بعض المعلومات لإكمال حسابك</p>
+        <h1 className="font-tajawal font-bold text-xl text-saris-text text-center mb-1">أكمل ملفك الشخصي</h1>
+        <p className="font-tajawal text-sm text-saris-text-2 text-center mb-6">نحتاج بعض المعلومات لتخصيص تجربتك</p>
 
         <form
           onSubmit={(e) => { e.preventDefault(); navigate("/welcome"); }}
           className="space-y-4"
         >
+          {/* Name */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="font-tajawal text-sm text-saris-text-2 block mb-1">الاسم الأول</label>
@@ -60,49 +71,69 @@ const CompleteProfile = () => {
             </div>
           </div>
 
+          {/* Grade */}
           <div>
-            <label className="font-tajawal text-sm text-saris-text-2 block mb-1">الدولة</label>
+            <label className="font-tajawal text-sm text-saris-text-2 block mb-1 flex items-center gap-1.5">
+              <GraduationCap className="w-4 h-4" />
+              المرحلة الدراسية
+            </label>
             <select
-              value={countryId}
-              onChange={(e) => setCountryId(e.target.value)}
-              className="w-full bg-saris-bg rounded-lg px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none text-right"
+              value={grade}
+              onChange={(e) => setGrade(e.target.value)}
+              className="w-full bg-saris-bg rounded-lg px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none text-right appearance-none"
+              required
             >
-              {mockCountries.map((c) => (
-                <option key={c.id} value={c.id}>{c.flag} {c.name}</option>
+              <option value="" disabled>اختر المرحلة</option>
+              {grades.map((g) => (
+                <option key={g} value={g}>{g}</option>
               ))}
             </select>
           </div>
 
+          {/* Target Exam */}
           <div>
-            <label className="font-tajawal text-sm text-saris-text-2 block mb-1">رقم الهاتف</label>
-            <div className="flex gap-2">
-              <div className="bg-saris-bg rounded-lg px-3 py-3 font-inter text-sm border border-saris-border text-saris-text-2 min-w-[80px] text-center flex items-center gap-1 justify-center">
-                <span>{cc.flag}</span>
-                <span>{cc.code}</span>
-              </div>
-              <input
-                className="flex-1 bg-saris-bg rounded-lg px-4 py-3 font-mono text-sm border border-saris-border focus:border-saris-navy focus:outline-none"
-                dir="ltr"
-                style={{ textAlign: "left" }}
-                inputMode="tel"
-                maxLength={10}
-                placeholder="5XXXXXXX"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-              />
-            </div>
-            <p className="font-tajawal text-[11px] text-saris-text-3 mt-1 flex items-center gap-1">
-              <Phone className="w-3 h-3" />
-              سيُستخدم لتأكيد العمليات المالية
-            </p>
+            <label className="font-tajawal text-sm text-saris-text-2 block mb-1 flex items-center gap-1.5">
+              <BookOpen className="w-4 h-4" />
+              الاختبار المستهدف
+            </label>
+            <select
+              value={targetExam}
+              onChange={(e) => setTargetExam(e.target.value)}
+              className="w-full bg-saris-bg rounded-lg px-4 py-3 font-tajawal text-sm border border-saris-border focus:border-saris-navy focus:outline-none text-right appearance-none"
+              required
+            >
+              <option value="" disabled>اختر الاختبار</option>
+              {exams.map((ex) => (
+                <option key={ex} value={ex}>{ex}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Target Score */}
+          <div>
+            <label className="font-tajawal text-sm text-saris-text-2 block mb-1 flex items-center gap-1.5">
+              <Target className="w-4 h-4" />
+              الدرجة المستهدفة <span className="text-saris-text-3 text-xs">(اختياري)</span>
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={targetScore}
+              onChange={(e) => setTargetScore(e.target.value)}
+              className="w-full bg-saris-bg rounded-lg px-4 py-3 font-inter text-sm border border-saris-border focus:border-saris-navy focus:outline-none"
+              placeholder="مثال: 85"
+              dir="ltr"
+              style={{ textAlign: "left" }}
+            />
           </div>
 
           <button
             type="submit"
             disabled={!canSubmit}
-            className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-xl py-3.5 disabled:opacity-50 shadow-card"
+            className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-xl py-3.5 disabled:opacity-50 shadow-card mt-2"
           >
-            حفظ ومتابعة
+            متابعة
           </button>
         </form>
       </motion.div>
