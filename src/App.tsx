@@ -16,33 +16,9 @@ import TopUp from "./pages/TopUp";
 import History from "./pages/History";
 import Referral from "./pages/Referral";
 import AppLayout from "./components/layout/AppLayout";
-import AdminLayout from "./components/layout/AdminLayout";
 import NotFound from "./pages/NotFound";
 import AdaptiveTraining from "./pages/AdaptiveTraining";
 import ExamSession from "./pages/ExamSession";
-
-// Admin pages
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminStats from "./pages/admin/AdminStats";
-import AdminExams from "./pages/admin/AdminExams";
-import AdminQuestions from "./pages/admin/AdminQuestions";
-import AdminAIGenerator from "./pages/admin/AdminAIGenerator";
-import AdminReviewQueue from "./pages/admin/AdminReviewQueue";
-import AdminJobs from "./pages/admin/AdminJobs";
-import AdminBankHealth from "./pages/admin/AdminBankHealth";
-import AdminAIMonitoring from "./pages/admin/AdminAIMonitoring";
-import AdminPointsPacks from "./pages/admin/AdminPointsPacks";
-import AdminPlans from "./pages/admin/AdminPlans";
-import AdminSettings from "./pages/admin/AdminSettings";
-import {
-  AdminCountries,
-  AdminContent,
-  AdminExamProfiles,
-  AdminGenerationAlerts,
-  AdminGenerationReport,
-  AdminDNABuilder,
-} from "./pages/admin/AdminStubs";
 
 const queryClient = new QueryClient();
 
@@ -72,29 +48,6 @@ const App = () => (
             <Route path="referral" element={<Referral />} />
             <Route path="adaptive-training/:sessionId" element={<AdaptiveTraining />} />
             <Route path="exam-session/:sessionId" element={<ExamSession />} />
-          </Route>
-
-          {/* Admin panel */}
-          <Route path="/app/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="stats" element={<AdminStats />} />
-            <Route path="countries" element={<AdminCountries />} />
-            <Route path="exams" element={<AdminExams />} />
-            <Route path="questions" element={<AdminQuestions />} />
-            <Route path="content" element={<AdminContent />} />
-            <Route path="exam-profiles" element={<AdminExamProfiles />} />
-            <Route path="ai-generator" element={<AdminAIGenerator />} />
-            <Route path="review-queue" element={<AdminReviewQueue />} />
-            <Route path="jobs" element={<AdminJobs />} />
-            <Route path="ai-monitoring" element={<AdminAIMonitoring />} />
-            <Route path="generation-alerts" element={<AdminGenerationAlerts />} />
-            <Route path="generation-report" element={<AdminGenerationReport />} />
-            <Route path="bank-health" element={<AdminBankHealth />} />
-            <Route path="dna-builder" element={<AdminDNABuilder />} />
-            <Route path="points-packs" element={<AdminPointsPacks />} />
-            <Route path="plans" element={<AdminPlans />} />
-            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
