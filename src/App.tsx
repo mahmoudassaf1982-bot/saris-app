@@ -50,29 +50,6 @@ const App = () => (
             <Route path="exam-session/:sessionId" element={<ExamSession />} />
           </Route>
 
-          {/* Admin panel */}
-          <Route path="/app/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="stats" element={<AdminStats />} />
-            <Route path="countries" element={<AdminCountries />} />
-            <Route path="exams" element={<AdminExams />} />
-            <Route path="questions" element={<AdminQuestions />} />
-            <Route path="content" element={<AdminContent />} />
-            <Route path="exam-profiles" element={<AdminExamProfiles />} />
-            <Route path="ai-generator" element={<AdminAIGenerator />} />
-            <Route path="review-queue" element={<AdminReviewQueue />} />
-            <Route path="jobs" element={<AdminJobs />} />
-            <Route path="ai-monitoring" element={<AdminAIMonitoring />} />
-            <Route path="generation-alerts" element={<AdminGenerationAlerts />} />
-            <Route path="generation-report" element={<AdminGenerationReport />} />
-            <Route path="bank-health" element={<AdminBankHealth />} />
-            <Route path="dna-builder" element={<AdminDNABuilder />} />
-            <Route path="points-packs" element={<AdminPointsPacks />} />
-            <Route path="plans" element={<AdminPlans />} />
-            <Route path="settings" element={<AdminSettings />} />
-          </Route>
-
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
