@@ -19,6 +19,7 @@ import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
 import AdaptiveTraining from "./pages/AdaptiveTraining";
 import ExamSession from "./pages/ExamSession";
+
 const queryClient = new QueryClient();
 
 const App = () => (
