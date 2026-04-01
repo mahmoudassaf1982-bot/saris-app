@@ -19,8 +19,8 @@ const tabs = [
 
 const Performance = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const hasData = true; // mock: set to false to test empty state
-  const isConnected = true; // mock realtime indicator
+  const hasData = true;
+  const isConnected = true;
 
   if (!hasData) {
     return (
@@ -34,7 +34,6 @@ const Performance = () => {
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-      {/* Header */}
       <div className="flex items-start justify-between mb-1">
         <h1 className="font-tajawal font-black text-2xl text-saris-text">ملف الأداء الشامل</h1>
         <span className={`flex items-center gap-1 text-xs font-tajawal mt-1 ${isConnected ? "text-saris-success" : "text-saris-text-3"}`}>
@@ -46,7 +45,7 @@ const Performance = () => {
         نظرة موحّدة على بصمة التعلم، خريطة المهارات، التوصيات، وتاريخ التدريب
       </p>
 
-      {/* Scrollable Tabs */}
+      {/* Scrollable Tabs — mobile-friendly with platform-matching active style */}
       <div className="flex gap-1.5 overflow-x-auto pb-3 mb-4 no-scrollbar">
         {tabs.map((tab) => (
           <button
@@ -54,8 +53,8 @@ const Performance = () => {
             onClick={() => setActiveTab(tab.key)}
             className={`whitespace-nowrap px-3 py-1.5 rounded-saris-full font-tajawal text-xs transition-all ${
               activeTab === tab.key
-                ? "bg-saris-navy text-white font-bold"
-                : "bg-saris-bg-card text-saris-text-2 border border-saris-border"
+                ? "bg-primary text-primary-foreground font-bold shadow-sm"
+                : "bg-transparent text-saris-text-2 border border-saris-border hover:bg-saris-bg-soft"
             }`}
           >
             {tab.label}
@@ -63,7 +62,6 @@ const Performance = () => {
         ))}
       </div>
 
-      {/* Tab Content */}
       {activeTab === "overview" && <OverviewTab />}
       {activeTab === "prediction" && <PredictedScoreTab />}
       {activeTab === "dna" && <DNATab />}

@@ -3,9 +3,6 @@ import SmartInsightHeader from "@/components/dashboard/SmartInsightHeader";
 import WelcomeSection from "@/components/dashboard/WelcomeSection";
 import DiamondBanner from "@/components/dashboard/DiamondBanner";
 import StatsGrid from "@/components/dashboard/StatsGrid";
-import StreakCounter from "@/components/dashboard/StreakCounter";
-import DailyGoals from "@/components/dashboard/DailyGoals";
-import AchievementBadges from "@/components/dashboard/AchievementBadges";
 import ProgressJourney from "@/components/dashboard/ProgressJourney";
 import QuickAIActions from "@/components/dashboard/QuickAIActions";
 import SkillMapPreview from "@/components/dashboard/SkillMapPreview";
@@ -21,11 +18,8 @@ const Dashboard = () => {
     <div className="space-y-0">
       <SmartInsightHeader />
       <WelcomeSection />
-      <StreakCounter />
       {!mockUser.isDiamond && <DiamondBanner />}
       <StatsGrid />
-      <DailyGoals />
-      <AchievementBadges />
       <ProgressJourney />
       <QuickAIActions />
       <SkillMapPreview />
