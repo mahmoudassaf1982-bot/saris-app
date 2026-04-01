@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
-import { Zap, Brain, BarChart3 } from "lucide-react";
+import { Zap, Target, Rocket, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
 
 const QuickAIActions = () => {
   const navigate = useNavigate();
@@ -9,24 +8,39 @@ const QuickAIActions = () => {
   const actions = [
     {
       label: "تدريب سريع",
+      subtitle: "5 دقائق",
       icon: Zap,
-      color: "text-saris-orange",
-      bg: "bg-saris-orange/10",
-      onClick: () => navigate("/app/exams"),
+      gradient: "gradient-gold",
+      iconBg: "bg-saris-orange/15",
+      iconColor: "text-saris-orange",
+      path: "/app/exams",
     },
     {
-      label: "تحليل أدائي",
+      label: "تحسين الدقة",
+      subtitle: "تركيز مكثف",
+      icon: Target,
+      gradient: "",
+      iconBg: "bg-saris-success/15",
+      iconColor: "text-saris-success",
+      path: "/app/exams",
+    },
+    {
+      label: "تحسين السرعة",
+      subtitle: "تمرين موقوت",
+      icon: Rocket,
+      gradient: "",
+      iconBg: "bg-saris-info/15",
+      iconColor: "text-saris-info",
+      path: "/app/exams",
+    },
+    {
+      label: "ملف الأداء",
+      subtitle: "تحليل شامل",
       icon: BarChart3,
-      color: "text-saris-info",
-      bg: "bg-saris-info/10",
-      onClick: () => navigate("/app/performance"),
-    },
-    {
-      label: "مساعد ذكي",
-      icon: Brain,
-      color: "text-saris-purple",
-      bg: "bg-saris-purple/10",
-      onClick: () => toast({ title: "المدرب الذكي سيكون متاحاً قريباً", description: "نعمل على تجهيز المدرب الذكي لمساعدتك" }),
+      gradient: "",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      path: "/app/performance",
     },
   ];
 
@@ -38,18 +52,21 @@ const QuickAIActions = () => {
       className="mt-4"
     >
       <h2 className="font-tajawal font-bold text-base text-saris-text mb-3">إجراءات سريعة</h2>
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {actions.map((action, i) => (
           <button
             key={i}
-            onClick={action.onClick}
-            className="flex-1 bg-saris-bg-card rounded-saris-md p-3 border border-saris-border shadow-card flex flex-col items-center gap-2 hover:shadow-card-hover transition-shadow"
+            onClick={() => navigate(action.path)}
+            className="bg-saris-bg-card rounded-2xl p-3 border border-saris-border shadow-card flex flex-col items-center gap-2 hover:shadow-card-hover hover:scale-[1.02] transition-all"
             aria-label={action.label}
           >
-            <div className={`w-9 h-9 rounded-saris-full ${action.bg} flex items-center justify-center`}>
-              <action.icon className={`w-4 h-4 ${action.color}`} />
+            <div className={`w-11 h-11 rounded-full ${action.iconBg} flex items-center justify-center`}>
+              <action.icon className={`w-5 h-5 ${action.iconColor}`} />
             </div>
-            <span className="font-tajawal text-xs font-medium text-saris-text-2">{action.label}</span>
+            <div className="text-center">
+              <span className="font-tajawal text-xs font-bold text-saris-text block">{action.label}</span>
+              <span className="font-tajawal text-[10px] text-saris-text-3">{action.subtitle}</span>
+            </div>
           </button>
         ))}
       </div>

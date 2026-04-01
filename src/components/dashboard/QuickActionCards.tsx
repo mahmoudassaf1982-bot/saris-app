@@ -5,27 +5,27 @@ import { BookOpen, UserPlus, Coins } from "lucide-react";
 const quickCards = [
   {
     label: "ابدأ اختبار",
+    subtitle: "محاكاة أو تدريب ذكي",
     icon: BookOpen,
     path: "/app/exams",
-    className: "gradient-primary",
+    iconClass: "gradient-primary",
     iconColor: "text-white",
-    textColor: "text-white",
   },
   {
     label: "ادعُ أصدقاءك",
+    subtitle: "واحصل على نقاط مجانية",
     icon: UserPlus,
     path: "/app/referral",
-    className: "bg-saris-success",
+    iconClass: "bg-saris-success",
     iconColor: "text-white",
-    textColor: "text-white",
   },
   {
     label: "شراء نقاط",
+    subtitle: "أو اشتراك Diamond",
     icon: Coins,
     path: "/app/topup",
-    className: "gradient-gold",
+    iconClass: "gradient-gold",
     iconColor: "text-saris-navy",
-    textColor: "text-saris-navy",
   },
 ];
 
@@ -37,16 +37,21 @@ const QuickActionCards = () => {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.6 }}
-      className="mt-4 grid grid-cols-3 gap-3"
+      className="mt-4 grid sm:grid-cols-3 gap-3"
     >
       {quickCards.map((card, i) => (
         <button
           key={i}
           onClick={() => navigate(card.path)}
-          className={`${card.className} rounded-saris-lg p-3 flex flex-col items-center gap-2 shadow-card hover:shadow-card-hover transition-shadow`}
+          className="bg-saris-bg-card rounded-2xl p-3 border border-saris-border shadow-card flex items-center gap-3 hover:shadow-card-hover hover:scale-[1.01] transition-all text-right"
         >
-          <card.icon className={`w-6 h-6 ${card.iconColor}`} />
-          <span className={`font-tajawal text-xs font-bold ${card.textColor}`}>{card.label}</span>
+          <div className={`w-12 h-12 rounded-full ${card.iconClass} flex items-center justify-center shrink-0`}>
+            <card.icon className={`w-5 h-5 ${card.iconColor}`} />
+          </div>
+          <div>
+            <span className="font-tajawal text-sm font-bold text-saris-text block">{card.label}</span>
+            <span className="font-tajawal text-[11px] text-saris-text-3">{card.subtitle}</span>
+          </div>
         </button>
       ))}
     </motion.div>

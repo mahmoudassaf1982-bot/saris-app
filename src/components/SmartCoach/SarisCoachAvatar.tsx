@@ -44,12 +44,28 @@ export default function SarisCoachAvatar({ state, size = 120, className = '' }: 
     waving: { duration: 0.8, repeat: Infinity, ease: 'easeInOut' },
   };
 
+  const dotParticles = [
+    { left: '10%', top: '10%', delay: 0 },
+    { left: '80%', top: '5%', delay: 0.2 },
+    { left: '5%', top: '40%', delay: 0.4 },
+    { left: '85%', top: '35%', delay: 0.1 },
+    { left: '20%', top: '0%', delay: 0.3 },
+    { left: '70%', top: '15%', delay: 0.5 },
+  ];
+
+  const starParticles = [
+    { left: '15%', top: '20%', delay: 0.15 },
+    { left: '75%', top: '25%', delay: 0.35 },
+  ];
+
   return (
-    <div className={`relative flex flex-col items-center ${className}`} style={{ width: size, height: size * 1.2 }}>
-      {/* Ground shadow */}
-      <div
-        className="absolute bottom-0 rounded-full bg-black/10 blur-md"
-        style={{ width: size * 0.6, height: size * 0.08 }}
+    <div className={`relative flex flex-col items-center ${className}`} style={{ width: size, height: size * 1.3 }}>
+      {/* Ground shadow — animated during celebration */}
+      <motion.div
+        className="absolute left-1/2 -translate-x-1/2 rounded-full bg-foreground/10"
+        style={{ width: size * 0.5, height: size * 0.06, bottom: 0 }}
+        animate={state === 'celebrating' ? { scaleX: [1, 0.6, 1], opacity: [0.1, 0.04, 0.1] } : {}}
+        transition={transitionConfig[state]}
       />
 
       <motion.img
@@ -75,22 +91,38 @@ export default function SarisCoachAvatar({ state, size = 120, className = '' }: 
         </div>
       )}
 
-      {/* Celebration particles */}
+      {/* Pointing / guiding sparkle */}
+      {(state === 'pointing' || state === 'guiding') && (
+        <motion.div
+          className="absolute w-2.5 h-2.5 rounded-full bg-saris-orange"
+          style={{ left: '25%', top: '25%' }}
+          animate={{ opacity: [0, 1, 0], scale: [0.5, 1.2, 0.5] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
+
+      {/* Celebration particles — 6 dots + 2 stars */}
       {state === 'celebrating' && (
         <div className="absolute inset-0 pointer-events-none">
-          {[
-            { left: '10%', top: '10%', delay: 0 },
-            { left: '80%', top: '5%', delay: 0.2 },
-            { left: '5%', top: '40%', delay: 0.4 },
-            { left: '85%', top: '35%', delay: 0.1 },
-          ].map((p, i) => (
+          {dotParticles.map((p, i) => (
             <motion.div
-              key={i}
-              className="absolute w-2 h-2 rounded-full bg-saris-orange"
+              key={`dot-${i}`}
+              className={`absolute w-2 h-2 rounded-full ${i % 2 === 0 ? 'bg-primary' : 'bg-saris-orange'}`}
               style={{ left: p.left, top: p.top }}
               animate={{ opacity: [0, 1, 0], y: [0, -20, -40], scale: [0, 1, 0] }}
               transition={{ duration: 1, delay: p.delay, repeat: Infinity }}
             />
+          ))}
+          {starParticles.map((p, i) => (
+            <motion.div
+              key={`star-${i}`}
+              className={`absolute text-xs ${i % 2 === 0 ? 'text-primary' : 'text-saris-orange'}`}
+              style={{ left: p.left, top: p.top }}
+              animate={{ opacity: [0, 1, 0], y: [0, -25, -50], scale: [0, 1.2, 0], rotate: [0, 180, 360] }}
+              transition={{ duration: 1.2, delay: p.delay, repeat: Infinity }}
+            >
+              ★
+            </motion.div>
           ))}
         </div>
       )}

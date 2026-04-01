@@ -21,15 +21,15 @@ const cards = [
   },
   {
     label: "معدل النجاح",
-    value: `${mockStats.passRate}%`,
-    sub: `${mockStats.passCount} ناجح من ${mockStats.totalGraded}`,
+    value: mockStats.totalGraded > 0 ? `${mockStats.passRate}%` : "—",
+    sub: mockStats.totalGraded > 0 ? `${mockStats.passCount} ناجح من ${mockStats.totalGraded}` : "لا توجد بيانات",
     icon: Trophy,
     iconColor: "text-saris-success",
     iconBg: "bg-saris-success/10",
   },
   {
     label: "متوسط الأداء",
-    value: `${mockStats.averageScore}%`,
+    value: mockStats.averageScore > 0 ? `${mockStats.averageScore}%` : "—",
     sub: "معدل الدرجات",
     icon: Target,
     iconColor: "text-saris-purple",
