@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SmartCoachProvider } from "./components/SmartCoach";
 
 import Auth from "./pages/Auth";
 import ChooseCountry from "./pages/ChooseCountry";
@@ -27,32 +28,34 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Navigate to="/auth" replace />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/auth/login" element={<Auth />} />
-          <Route path="/auth/register" element={<Auth />} />
-          <Route path="/choose-country" element={<ChooseCountry />} />
-          <Route path="/complete-profile" element={<CompleteProfile />} />
-          <Route path="/welcome" element={<Welcome />} />
+      <SmartCoachProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Navigate to="/auth" replace />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/login" element={<Auth />} />
+            <Route path="/auth/register" element={<Auth />} />
+            <Route path="/choose-country" element={<ChooseCountry />} />
+            <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/welcome" element={<Welcome />} />
 
-          {/* Student app */}
-          <Route path="/app" element={<AppLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="exams" element={<Exams />} />
-            <Route path="performance" element={<Performance />} />
-            <Route path="wallet" element={<Wallet />} />
-            <Route path="topup" element={<TopUp />} />
-            <Route path="history" element={<History />} />
-            <Route path="referral" element={<Referral />} />
-            <Route path="adaptive-training/:sessionId" element={<AdaptiveTraining />} />
-            <Route path="exam-session/:sessionId" element={<ExamSession />} />
-          </Route>
+            {/* Student app */}
+            <Route path="/app" element={<AppLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="exams" element={<Exams />} />
+              <Route path="performance" element={<Performance />} />
+              <Route path="wallet" element={<Wallet />} />
+              <Route path="topup" element={<TopUp />} />
+              <Route path="history" element={<History />} />
+              <Route path="referral" element={<Referral />} />
+              <Route path="adaptive-training/:sessionId" element={<AdaptiveTraining />} />
+              <Route path="exam-session/:sessionId" element={<ExamSession />} />
+            </Route>
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </SmartCoachProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
