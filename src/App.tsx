@@ -16,34 +16,9 @@ import TopUp from "./pages/TopUp";
 import History from "./pages/History";
 import Referral from "./pages/Referral";
 import AppLayout from "./components/layout/AppLayout";
-import AdminLayout from "./components/layout/AdminLayout";
 import NotFound from "./pages/NotFound";
 import AdaptiveTraining from "./pages/AdaptiveTraining";
 import ExamSession from "./pages/ExamSession";
-
-// Admin pages
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminStats from "./pages/admin/AdminStats";
-import AdminExams from "./pages/admin/AdminExams";
-import AdminQuestions from "./pages/admin/AdminQuestions";
-import AdminAIGenerator from "./pages/admin/AdminAIGenerator";
-import AdminReviewQueue from "./pages/admin/AdminReviewQueue";
-import AdminJobs from "./pages/admin/AdminJobs";
-import AdminBankHealth from "./pages/admin/AdminBankHealth";
-import AdminAIMonitoring from "./pages/admin/AdminAIMonitoring";
-import AdminPointsPacks from "./pages/admin/AdminPointsPacks";
-import AdminPlans from "./pages/admin/AdminPlans";
-import AdminSettings from "./pages/admin/AdminSettings";
-import {
-  AdminCountries,
-  AdminContent,
-  AdminExamProfiles,
-  AdminGenerationAlerts,
-  AdminGenerationReport,
-  AdminDNABuilder,
-} from "./pages/admin/AdminStubs";
-
 const queryClient = new QueryClient();
 
 const App = () => (
