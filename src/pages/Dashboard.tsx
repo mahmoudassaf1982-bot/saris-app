@@ -30,7 +30,7 @@ const Dashboard = () => {
       {mockUser.isAdmin && (
         <div className="mt-4 px-1">
           <a
-            href="href="https://platform.saris.cloud/app/admin""
+            href="https://platform.saris.cloud/app/admin"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 font-tajawal text-xs text-saris-text-3 hover:text-saris-navy transition-colors"
