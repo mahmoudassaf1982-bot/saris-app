@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, CheckCircle, Loader2, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ALLOWED_DOMAINS = [
   "gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "icloud.com",
@@ -22,7 +23,15 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const isRegisterRoute = location.pathname.includes("register");
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/app", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
   const [isLogin, setIsLogin] = useState(!isRegisterRoute);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -60,48 +69,71 @@ const Auth = () => {
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) return;
+    setSubmitting(true);
 
-    if (isLogin) {
-      navigate("/app");
-    } else {
-      if (!fullName.trim()) {
-        toast({ title: "خطأ", description: "يرجى إدخال الاسم الكامل", variant: "destructive" });
-        return;
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          toast({ title: "خطأ في تسجيل الدخول", description: error.message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        navigate("/app");
+      } else {
+        if (!fullName.trim()) {
+          toast({ title: "خطأ", description: "يرجى إدخال الاسم الكامل", variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        if (password.length < 6) {
+          toast({ title: "خطأ", description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        if (password !== confirmPassword) {
+          toast({ title: "خطأ", description: "كلمتا المرور غير متطابقتين", variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName, referral_code: referralCode || undefined },
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) {
+          toast({ title: "خطأ في التسجيل", description: error.message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        setShowSuccess(true);
+        setTimeout(() => navigate("/choose-country"), 2000);
       }
-      if (password.length < 6) {
-        toast({ title: "خطأ", description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
-        return;
-      }
-      if (password !== confirmPassword) {
-        toast({ title: "خطأ", description: "كلمتا المرور غير متطابقتين", variant: "destructive" });
-        return;
-      }
-      setShowSuccess(true);
-      setTimeout(() => navigate("/choose-country"), 2000);
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message ?? "حدث خطأ غير متوقع", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleGoogleAuth = async () => {
-    const hostname = window.location.hostname;
-    const isLovableDomain = hostname.includes('lovable.app') || hostname.includes('lovableproject.com') || hostname === 'localhost';
-
-    if (!isLovableDomain) {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: { prompt: 'select_account' },
-        },
-      });
-      if (error) {
-        toast({ title: "خطأ", description: error.message, variant: "destructive" });
-      }
-    } else {
-      // Lovable preview — mock navigation for development
-      navigate("/app");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { prompt: 'select_account' },
+      },
+    });
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
     }
   };
 
@@ -310,8 +342,10 @@ const Auth = () => {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-xl py-3.5 shadow-card hover:shadow-card-hover transition-shadow"
+              disabled={submitting}
+              className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-xl py-3.5 shadow-card hover:shadow-card-hover transition-shadow disabled:opacity-60 flex items-center justify-center gap-2"
             >
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLogin ? "تسجيل الدخول" : "إنشاء حساب"}
             </button>
           </motion.form>
