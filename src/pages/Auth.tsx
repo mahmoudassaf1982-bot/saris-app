@@ -60,27 +60,58 @@ const Auth = () => {
     return true;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateEmail(email)) return;
+    setSubmitting(true);
 
-    if (isLogin) {
-      navigate("/app");
-    } else {
-      if (!fullName.trim()) {
-        toast({ title: "خطأ", description: "يرجى إدخال الاسم الكامل", variant: "destructive" });
-        return;
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          toast({ title: "خطأ في تسجيل الدخول", description: error.message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        navigate("/app");
+      } else {
+        if (!fullName.trim()) {
+          toast({ title: "خطأ", description: "يرجى إدخال الاسم الكامل", variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        if (password.length < 6) {
+          toast({ title: "خطأ", description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        if (password !== confirmPassword) {
+          toast({ title: "خطأ", description: "كلمتا المرور غير متطابقتين", variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName, referral_code: referralCode || undefined },
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) {
+          toast({ title: "خطأ في التسجيل", description: error.message, variant: "destructive" });
+          setSubmitting(false);
+          return;
+        }
+        setShowSuccess(true);
+        setTimeout(() => navigate("/choose-country"), 2000);
       }
-      if (password.length < 6) {
-        toast({ title: "خطأ", description: "كلمة المرور يجب أن تكون 6 أحرف على الأقل", variant: "destructive" });
-        return;
-      }
-      if (password !== confirmPassword) {
-        toast({ title: "خطأ", description: "كلمتا المرور غير متطابقتين", variant: "destructive" });
-        return;
-      }
-      setShowSuccess(true);
-      setTimeout(() => navigate("/choose-country"), 2000);
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message ?? "حدث خطأ غير متوقع", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
     }
   };
 
