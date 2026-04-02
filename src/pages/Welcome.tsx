@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Brain, BarChart3, Target, Sparkles } from "lucide-react";
 import SarisCoachAvatar from "@/components/SmartCoach/SarisCoachAvatar";
-import { mockUser } from "@/data/mock-data";
+import { useAuth } from "@/contexts/AuthContext";
 
 const features = [
   { icon: Brain, text: "تدريب ذكي يتكيف مع مستواك", emoji: "🧠" },
@@ -13,6 +13,7 @@ const features = [
 
 const Welcome = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [entered, setEntered] = useState(false);
 
   return (
@@ -40,7 +41,7 @@ const Welcome = () => {
             className="text-center mb-6"
           >
             <h1 className="font-tajawal font-black text-2xl text-saris-text mb-1">
-              مرحبًا {mockUser.firstName}! 🎉
+              مرحبًا {profile?.first_name ?? "مستخدم"}! 🎉
             </h1>
             <p className="font-tajawal font-bold text-lg text-saris-navy">
               أنا مدربك الذكي سارس

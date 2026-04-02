@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { mockSkills } from "@/data/mock-data";
+import { useSkillMap } from "@/hooks/useSkillMap";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Target } from "lucide-react";
 
 const getSkillColor = (score: number) => {
   if (score >= 80) return "bg-saris-amber";
@@ -25,6 +27,24 @@ const getSkillLabel = (score: number) => {
 
 const SkillMapTab = () => {
   const navigate = useNavigate();
+  const { skills, loading } = useSkillMap();
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-64 rounded-saris-lg" />
+      </div>
+    );
+  }
+
+  if (skills.length === 0) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+        <Target className="w-12 h-12 text-saris-text-3 mx-auto mb-3" />
+        <p className="font-tajawal text-sm text-saris-text-2">لا توجد بيانات مهارات بعد</p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
@@ -32,7 +52,7 @@ const SkillMapTab = () => {
       <div className="bg-saris-bg-card rounded-saris-lg p-4 border border-saris-border">
         <h3 className="font-tajawal font-bold text-sm text-saris-text mb-4">🗺️ مستوى المهارات</h3>
         <div className="space-y-4">
-          {mockSkills.map((skill, i) => (
+          {skills.map((skill, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: 10 }}
@@ -60,10 +80,10 @@ const SkillMapTab = () => {
       </div>
 
       {/* Strong skills */}
-      {mockSkills.filter(s => s.score >= 60).length > 0 && (
+      {skills.filter(s => s.score >= 60).length > 0 && (
         <div>
           <h3 className="font-tajawal font-bold text-sm text-saris-text mb-2">✅ أقوى مهاراتك</h3>
-          {mockSkills.filter(s => s.score >= 60).map((skill, i) => (
+          {skills.filter(s => s.score >= 60).map((skill, i) => (
             <div key={i} className="bg-saris-success/5 rounded-saris-md p-3 border border-saris-success/20 mb-2">
               <span className="font-tajawal text-sm text-saris-text">{skill.name} — {skill.score}%</span>
             </div>
@@ -72,10 +92,10 @@ const SkillMapTab = () => {
       )}
 
       {/* Weak skills */}
-      {mockSkills.filter(s => s.score < 40).length > 0 && (
+      {skills.filter(s => s.score < 40).length > 0 && (
         <div>
           <h3 className="font-tajawal font-bold text-sm text-saris-text mb-2">⚠️ مهارات تحتاج تحسين</h3>
-          {mockSkills.filter(s => s.score < 40).map((skill, i) => (
+          {skills.filter(s => s.score < 40).map((skill, i) => (
             <div key={i} className="bg-saris-danger/5 rounded-saris-md p-3 border border-saris-danger/20 mb-2 flex items-center justify-between">
               <span className="font-tajawal text-sm text-saris-text">{skill.name} — {skill.score}%</span>
               <button

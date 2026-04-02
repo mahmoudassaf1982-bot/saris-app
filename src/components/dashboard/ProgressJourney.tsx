@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Activity, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { mockRecentSessions } from "@/data/mock-data";
+import { useUserStats } from "@/hooks/useUserStats";
 
 const formatDate = (dateStr: string) => {
   const d = new Date(dateStr);
@@ -24,7 +24,11 @@ const trendConfig: Record<TrendType, { icon: typeof TrendingUp; color: string; d
 };
 
 const ProgressJourney = () => {
-  const sessions = mockRecentSessions.slice(0, 5).reverse(); // oldest → newest, left to right
+  const { recentSessions, loading } = useUserStats();
+
+  if (loading) return null;
+
+  const sessions = recentSessions.slice(0, 5).reverse();
 
   if (sessions.length < 2) return null;
 
@@ -54,7 +58,6 @@ const ProgressJourney = () => {
             const cfg = trendConfig[trend];
             const TrendIcon = cfg.icon;
             const scoreColor = session.score >= 60 ? "text-saris-success" : "text-destructive";
-            // Next trend for connecting line color
             const nextTrend = i < sessions.length - 1 ? trends[i + 1] : null;
             const nextCfg = nextTrend ? trendConfig[nextTrend] : null;
 
@@ -66,14 +69,11 @@ const ProgressJourney = () => {
                 transition={{ duration: 0.3, delay: 0.3 + i * 0.08 }}
                 className="flex flex-col items-center flex-1 relative"
               >
-                {/* Score */}
                 <span className={`font-inter font-bold text-sm ${scoreColor}`}>
                   {session.score}%
                 </span>
 
-                {/* Dot + connecting line */}
                 <div className="relative flex items-center justify-center w-full my-2">
-                  {/* Line to next */}
                   {i < sessions.length - 1 && nextCfg && (
                     <div
                       className={`absolute top-1/2 -translate-y-1/2 h-0.5 ${nextCfg.dotColor}`}
@@ -83,12 +83,10 @@ const ProgressJourney = () => {
                   <div className={`w-3 h-3 rounded-full ${cfg.dotColor} relative z-10 ring-2 ring-saris-bg-card`} />
                 </div>
 
-                {/* Trend icon */}
                 <TrendIcon className={`w-3.5 h-3.5 ${cfg.color} mb-1`} />
 
-                {/* Date */}
                 <span className="font-tajawal text-[10px] text-saris-text-3 leading-tight text-center">
-                  {formatDate(session.date)}
+                  {session.date ? formatDate(session.date) : ""}
                 </span>
               </motion.div>
             );

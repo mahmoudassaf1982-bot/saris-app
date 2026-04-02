@@ -1,15 +1,17 @@
 import { motion } from "framer-motion";
 import { Copy, Share2, Gift, UserPlus, Users } from "lucide-react";
-import { mockUser, mockReferralStats } from "@/data/mock-data";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const Referral = () => {
   const { toast } = useToast();
+  const { profile } = useAuth();
+  const referralCode = profile?.referral_code ?? "------";
 
-  const shareMessage = `جرّب منصة سارس للاختبارات! استخدم كود الدعوة ${mockUser.referralCode} واحصل على نقاط مجانية 🎁\nhttps://saris.cloud/ref/${mockUser.referralCode}`;
+  const shareMessage = `جرّب منصة سارس للاختبارات! استخدم كود الدعوة ${referralCode} واحصل على نقاط مجانية 🎁\nhttps://saris.cloud/ref/${referralCode}`;
 
   const copyCode = () => {
-    navigator.clipboard.writeText(mockUser.referralCode);
+    navigator.clipboard.writeText(referralCode);
     toast({ title: "تم النسخ!", description: "تم نسخ كود الدعوة" });
   };
 
@@ -18,11 +20,11 @@ const Referral = () => {
   };
 
   const shareTelegram = () => {
-    window.open(`https://t.me/share/url?url=${encodeURIComponent("https://saris.cloud/ref/" + mockUser.referralCode)}&text=${encodeURIComponent(shareMessage)}`, "_blank");
+    window.open(`https://t.me/share/url?url=${encodeURIComponent("https://saris.cloud/ref/" + referralCode)}&text=${encodeURIComponent(shareMessage)}`, "_blank");
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`https://saris.cloud/ref/${mockUser.referralCode}`);
+    navigator.clipboard.writeText(`https://saris.cloud/ref/${referralCode}`);
     toast({ title: "تم النسخ!", description: "تم نسخ رابط الدعوة" });
   };
 
@@ -35,7 +37,7 @@ const Referral = () => {
       <div className="gradient-primary rounded-saris-lg p-5 mb-5">
         <p className="font-tajawal text-sm text-white/80 mb-2">كود الدعوة الخاص بك</p>
         <div className="flex items-center justify-between bg-white/10 rounded-saris-md px-4 py-3 mb-4">
-          <span className="font-inter font-extrabold text-2xl text-white tracking-widest">{mockUser.referralCode}</span>
+          <span className="font-inter font-extrabold text-2xl text-white tracking-widest">{referralCode}</span>
           <button onClick={copyCode} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center" aria-label="نسخ الكود">
             <Copy className="w-5 h-5 text-white" />
           </button>
@@ -75,49 +77,13 @@ const Referral = () => {
         ))}
       </div>
 
-      {/* Stats */}
+      {/* Stats - placeholder until referral tracking is implemented */}
       <div className="bg-saris-bg-card rounded-saris-lg p-4 border border-saris-border mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-saris-navy" />
-            <span className="font-tajawal font-bold text-sm text-saris-text">إحصائيات الدعوات</span>
-          </div>
+        <div className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-saris-navy" />
+          <span className="font-tajawal font-bold text-sm text-saris-text">إحصائيات الدعوات</span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-saris-bg rounded-saris-md p-3 text-center">
-            <p className="font-inter font-bold text-xl text-saris-navy">{mockReferralStats.totalReferrals}</p>
-            <p className="font-tajawal text-[10px] text-saris-text-3">دعوة ناجحة</p>
-          </div>
-          <div className="bg-saris-bg rounded-saris-md p-3 text-center">
-            <p className="font-inter font-bold text-xl text-saris-success">{mockReferralStats.pointsEarned}</p>
-            <p className="font-tajawal text-[10px] text-saris-text-3">نقطة مكتسبة</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Referral history */}
-      <h2 className="font-tajawal font-bold text-base text-saris-text mb-3">سجل الدعوات</h2>
-      <div className="space-y-2">
-        {mockReferralStats.referrals.map((ref, i) => (
-          <motion.div
-            key={ref.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className="bg-saris-bg-card rounded-saris-md p-3 border border-saris-border flex items-center justify-between"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-saris-info/10 flex items-center justify-center">
-                <span className="font-tajawal text-xs font-bold text-saris-info">{ref.maskedName.charAt(0)}</span>
-              </div>
-              <div>
-                <p className="font-tajawal text-sm text-saris-text">{ref.maskedName}</p>
-                <p className="font-inter text-[10px] text-saris-text-3">{ref.date}</p>
-              </div>
-            </div>
-            <span className="font-inter font-bold text-sm text-saris-success">+{ref.points} نقطة</span>
-          </motion.div>
-        ))}
+        <p className="font-tajawal text-xs text-saris-text-3 mt-2">سيتم عرض الإحصائيات هنا قريباً</p>
       </div>
     </motion.div>
   );

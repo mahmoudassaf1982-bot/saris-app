@@ -1,10 +1,12 @@
 import { motion } from "framer-motion";
 import { Coins, Sparkles, CheckCircle } from "lucide-react";
-import { mockStats, mockPointsPacks } from "@/data/mock-data";
+import { mockPointsPacks } from "@/data/mock-data";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const TopUp = () => {
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   const handleBuyPack = (pack: typeof mockPointsPacks[0]) => {
     toast({ title: "تم الشراء بنجاح!", description: `+${pack.points} نقطة تمت إضافتها لحسابك` });
@@ -22,7 +24,7 @@ const TopUp = () => {
       {/* Current balance */}
       <div className="gradient-primary rounded-saris-lg p-4 mb-6 flex items-center gap-3">
         <Coins className="w-6 h-6 text-saris-orange" />
-        <span className="font-tajawal text-sm text-white">رصيدك الحالي: <b className="font-inter">{mockStats.balance}</b> نقطة</span>
+        <span className="font-tajawal text-sm text-white">رصيدك الحالي: <b className="font-inter">{profile?.balance ?? 0}</b> نقطة</span>
       </div>
 
       {/* Points packs */}
