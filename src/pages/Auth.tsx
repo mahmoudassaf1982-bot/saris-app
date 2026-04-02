@@ -23,7 +23,15 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const isRegisterRoute = location.pathname.includes("register");
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/app", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
   const [isLogin, setIsLogin] = useState(!isRegisterRoute);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
