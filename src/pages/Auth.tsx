@@ -116,23 +116,15 @@ const Auth = () => {
   };
 
   const handleGoogleAuth = async () => {
-    const hostname = window.location.hostname;
-    const isLovableDomain = hostname.includes('lovable.app') || hostname.includes('lovableproject.com') || hostname === 'localhost';
-
-    if (!isLovableDomain) {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: { prompt: 'select_account' },
-        },
-      });
-      if (error) {
-        toast({ title: "خطأ", description: error.message, variant: "destructive" });
-      }
-    } else {
-      // Lovable preview — mock navigation for development
-      navigate("/app");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: { prompt: 'select_account' },
+      },
+    });
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
     }
   };
 
