@@ -7,15 +7,15 @@ interface Profile {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
-  balance: number;
-  is_admin: boolean;
+  country_id: string | null;
+  country_name: string | null;
   is_diamond: boolean;
-  country: string | null;
-  country_flag: string | null;
-  exam_template_id: string | null;
+  is_admin: boolean;
   referral_code: string | null;
-  signup_bonus: number;
+  welcome_seen: boolean;
+  has_completed_first_session: boolean;
   created_at: string | null;
+  balance: number;
 }
 
 interface AuthContextType {
@@ -24,6 +24,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -32,22 +33,45 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  refreshProfile: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
-async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, first_name, last_name, email, balance, is_admin, is_diamond, country, country_flag, exam_template_id, referral_code, signup_bonus, created_at")
-    .eq("id", userId)
-    .single();
+async function fetchUserData(userId: string): Promise<Profile | null> {
+  const [profileRes, walletRes, roleRes] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+    supabase.from("wallets").select("balance").eq("user_id", userId).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", userId),
+  ]);
 
-  if (error) {
-    console.error("Error fetching profile:", error.message);
+  if (profileRes.error) {
+    console.error("Error fetching profile:", profileRes.error.message);
     return null;
   }
-  return data as Profile;
+
+  if (!profileRes.data) return null;
+
+  const p = profileRes.data;
+  const balance = walletRes.data?.balance ?? 0;
+  const roles: string[] = (roleRes.data ?? []).map((r: { role: string }) => r.role);
+  const isAdmin = roles.includes("admin");
+
+  return {
+    id: p.id,
+    first_name: p.first_name ?? null,
+    last_name: p.last_name ?? null,
+    email: p.email ?? null,
+    country_id: p.country_id ?? null,
+    country_name: p.country_name ?? null,
+    is_diamond: p.is_diamond ?? false,
+    is_admin: isAdmin,
+    referral_code: p.referral_code ?? null,
+    welcome_seen: p.welcome_seen ?? false,
+    has_completed_first_session: p.has_completed_first_session ?? false,
+    created_at: p.created_at ?? null,
+    balance,
+  };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -56,18 +80,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const loadProfile = async (userId: string) => {
+    const data = await fetchUserData(userId);
+    setProfile(data);
+  };
+
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      async (_event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
 
         if (newSession?.user) {
-          // Use setTimeout to avoid Supabase deadlock
           setTimeout(async () => {
-            const p = await fetchProfile(newSession.user.id);
-            setProfile(p);
+            await loadProfile(newSession.user.id);
             setLoading(false);
           }, 0);
         } else {
@@ -77,16 +103,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check existing session
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
 
       if (existingSession?.user) {
-        fetchProfile(existingSession.user.id).then((p) => {
-          setProfile(p);
-          setLoading(false);
-        });
+        loadProfile(existingSession.user.id).then(() => setLoading(false));
       } else {
         setLoading(false);
       }
@@ -102,8 +124,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
+  const refreshProfile = async () => {
+    if (user) await loadProfile(user.id);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
