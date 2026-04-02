@@ -18,7 +18,7 @@ const Referral = () => {
   };
 
   const shareTelegram = () => {
-    window.open(`https://t.me/share/url?url=${encodeURIComponent("window.open(`https://t.me/share/url?url=${encodeURIComponent("https://saris.cloud/ref/" + mockUser.referralCode)}&text=${encodeURIComponent(shareMessage)}`, "_blank");)}&text=${encodeURIComponent(shareMessage)}`, "_blank");
+    window.open(`https://t.me/share/url?url=${encodeURIComponent("https://saris.cloud/ref/" + mockUser.referralCode)}&text=${encodeURIComponent(shareMessage)}`, "_blank");
   };
 
   const copyLink = () => {
