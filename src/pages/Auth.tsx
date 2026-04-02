@@ -333,8 +333,10 @@ const Auth = () => {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-xl py-3.5 shadow-card hover:shadow-card-hover transition-shadow"
+              disabled={submitting}
+              className="w-full gradient-primary text-white font-tajawal font-bold text-base rounded-xl py-3.5 shadow-card hover:shadow-card-hover transition-shadow disabled:opacity-60 flex items-center justify-center gap-2"
             >
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
               {isLogin ? "تسجيل الدخول" : "إنشاء حساب"}
             </button>
           </motion.form>
