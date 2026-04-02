@@ -1,14 +1,16 @@
 import { motion } from "framer-motion";
 import { Coins, Sparkles, CheckCircle } from "lucide-react";
-import { mockPointsPacks } from "@/data/mock-data";
+import { usePointsPacks } from "@/hooks/usePointsPacks";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const TopUp = () => {
   const { toast } = useToast();
   const { profile } = useAuth();
+  const { packs, loading } = usePointsPacks(profile?.country_id ?? null);
 
-  const handleBuyPack = (pack: typeof mockPointsPacks[0]) => {
+  const handleBuyPack = (pack: { points: number }) => {
     toast({ title: "تم الشراء بنجاح!", description: `+${pack.points} نقطة تمت إضافتها لحسابك` });
   };
 
@@ -29,36 +31,45 @@ const TopUp = () => {
 
       {/* Points packs */}
       <h2 className="font-tajawal font-bold text-base text-saris-text mb-3">باقات النقاط</h2>
-      <div className="grid grid-cols-2 gap-3 mb-8">
-        {mockPointsPacks.map((pack, i) => (
-          <motion.div
-            key={pack.id}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05 }}
-            className={`bg-saris-bg-card rounded-saris-lg p-4 border relative ${
-              pack.popular ? "border-saris-orange shadow-card-hover" : "border-saris-border"
-            }`}
-          >
-            {pack.popular && (
-              <span className="absolute -top-2.5 right-3 bg-saris-orange text-white font-tajawal text-[10px] font-bold px-2 py-0.5 rounded-saris-full">
-                الأكثر مبيعًا
-              </span>
-            )}
-            <p className="font-tajawal font-bold text-sm text-saris-text mb-1">{pack.name}</p>
-            <p className="font-inter font-extrabold text-2xl text-saris-navy">{pack.points}</p>
-            <p className="font-tajawal text-xs text-saris-text-3 mb-1">نقطة</p>
-            <p className="font-inter font-bold text-sm text-saris-orange mb-1">${pack.price}</p>
-            <p className="font-tajawal text-[10px] text-saris-text-3 mb-3">{pack.description}</p>
-            <button
-              onClick={() => handleBuyPack(pack)}
-              className="w-full border border-saris-orange text-saris-orange font-tajawal font-bold text-xs rounded-saris-md py-2 hover:bg-saris-orange/5 transition-colors"
+      {loading ? (
+        <div className="grid grid-cols-2 gap-3 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-44 w-full rounded-saris-lg" />
+          ))}
+        </div>
+      ) : packs.length === 0 ? (
+        <p className="font-tajawal text-sm text-saris-text-3 text-center py-6 mb-8">لا توجد باقات متاحة حالياً</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 mb-8">
+          {packs.map((pack, i) => (
+            <motion.div
+              key={pack.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05 }}
+              className={`bg-saris-bg-card rounded-saris-lg p-4 border relative ${
+                pack.popular ? "border-saris-orange shadow-card-hover" : "border-saris-border"
+              }`}
             >
-              اشتري الآن
-            </button>
-          </motion.div>
-        ))}
-      </div>
+              {pack.popular && (
+                <span className="absolute -top-2.5 right-3 bg-saris-orange text-white font-tajawal text-[10px] font-bold px-2 py-0.5 rounded-saris-full">
+                  الأكثر مبيعًا
+                </span>
+              )}
+              <p className="font-tajawal font-bold text-sm text-saris-text mb-1">{pack.label}</p>
+              <p className="font-inter font-extrabold text-2xl text-saris-navy">{pack.points}</p>
+              <p className="font-tajawal text-xs text-saris-text-3 mb-1">نقطة</p>
+              <p className="font-inter font-bold text-sm text-saris-orange mb-3">${pack.price_usd}</p>
+              <button
+                onClick={() => handleBuyPack(pack)}
+                className="w-full border border-saris-orange text-saris-orange font-tajawal font-bold text-xs rounded-saris-md py-2 hover:bg-saris-orange/5 transition-colors"
+              >
+                اشتري الآن
+              </button>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       {/* Diamond section */}
       <div className="flex items-center gap-2 mb-4">
