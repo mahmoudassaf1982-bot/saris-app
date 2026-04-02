@@ -1,21 +1,43 @@
 import { motion } from "framer-motion";
 import { BookOpen, Target, Trophy, TrendingUp } from "lucide-react";
-import { mockStats, mockRecentSessions } from "@/data/mock-data";
+import { useUserStats } from "@/hooks/useUserStats";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 
-const chartData = mockRecentSessions.slice().reverse().map((s, i) => ({ name: `${i + 1}`, score: s.score }));
-
 const OverviewTab = () => {
-  const passRate = Math.round((mockStats.passCount / mockStats.totalGraded) * 100);
+  const { stats, recentSessions, loading } = useUserStats();
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-3 gap-2">
+          {[0, 1, 2].map((i) => <Skeleton key={i} className="h-24 rounded-saris-lg" />)}
+        </div>
+        <Skeleton className="h-48 rounded-saris-lg" />
+      </div>
+    );
+  }
+
+  if (!stats || stats.completedSessions === 0) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
+        <BookOpen className="w-12 h-12 text-saris-text-3 mx-auto mb-3" />
+        <p className="font-tajawal text-sm text-saris-text-2">لا توجد بيانات أداء بعد</p>
+      </motion.div>
+    );
+  }
+
+  const chartData = recentSessions.slice().reverse().map((s, i) => ({ name: `${i + 1}`, score: s.score }));
+  const passRate = stats.totalGraded > 0 ? stats.passRate : 0;
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
       {/* Stats Grid */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { icon: BookOpen, label: "إجمالي الجلسات", value: mockStats.completedSessions, color: "text-saris-navy" },
-          { icon: Target, label: "متوسط الأداء", value: `${mockStats.averageScore}%`, color: "text-saris-orange" },
-          { icon: Trophy, label: "أفضل نتيجة", value: `${mockStats.bestScore}%`, color: "text-saris-success" },
+          { icon: BookOpen, label: "إجمالي الجلسات", value: stats.completedSessions, color: "text-saris-navy" },
+          { icon: Target, label: "متوسط الأداء", value: `${stats.averageScore}%`, color: "text-saris-orange" },
+          { icon: Trophy, label: "أفضل نتيجة", value: `${stats.bestScore}%`, color: "text-saris-success" },
         ].map((stat, i) => (
           <motion.div
             key={i}
@@ -47,43 +69,46 @@ const OverviewTab = () => {
             <Target className="w-5 h-5 text-saris-info" />
           </div>
           <div>
-            <p className="font-inter font-bold text-lg text-saris-text">{mockStats.completedSessions}/{mockStats.totalSessions}</p>
+            <p className="font-inter font-bold text-lg text-saris-text">{stats.completedSessions}/{stats.totalSessions}</p>
             <p className="font-tajawal text-[10px] text-saris-text-3">الجلسات المكتملة</p>
           </div>
         </div>
       </div>
 
       {/* Performance Trend Chart */}
-      <div className="bg-saris-bg-card rounded-saris-lg p-4 border border-saris-border">
-        <h3 className="font-tajawal font-bold text-sm text-saris-text mb-3">📈 اتجاه الأداء</h3>
-        <div className="h-[160px]" dir="ltr">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
-              <Tooltip contentStyle={{ fontSize: 12 }} />
-              <Line type="monotone" dataKey="score" stroke="hsl(var(--saris-navy))" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--saris-orange))" }} />
-            </LineChart>
-          </ResponsiveContainer>
+      {chartData.length > 1 && (
+        <div className="bg-saris-bg-card rounded-saris-lg p-4 border border-saris-border">
+          <h3 className="font-tajawal font-bold text-sm text-saris-text mb-3">📈 اتجاه الأداء</h3>
+          <div className="h-[160px]" dir="ltr">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                <Tooltip contentStyle={{ fontSize: 12 }} />
+                <Line type="monotone" dataKey="score" stroke="hsl(var(--saris-navy))" strokeWidth={2} dot={{ r: 3, fill: "hsl(var(--saris-orange))" }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
-        <p className="font-tajawal text-xs text-saris-success mt-2">أداؤك يتحسن بشكل ملحوظ في الجلسات الأخيرة 📈</p>
-      </div>
+      )}
 
       {/* Recent Activity */}
-      <div className="bg-saris-bg-card rounded-saris-lg p-4 border border-saris-border">
-        <h3 className="font-tajawal font-bold text-sm text-saris-text mb-3">🕐 آخر النشاطات</h3>
-        <div className="space-y-2">
-          {mockRecentSessions.slice(0, 3).map((s) => (
-            <div key={s.id} className="flex items-center justify-between bg-saris-bg rounded-saris-sm px-3 py-2">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${s.passed ? "bg-saris-success" : "bg-saris-danger"}`} />
-                <span className="font-tajawal text-xs text-saris-text truncate max-w-[180px]">{s.examName}</span>
+      {recentSessions.length > 0 && (
+        <div className="bg-saris-bg-card rounded-saris-lg p-4 border border-saris-border">
+          <h3 className="font-tajawal font-bold text-sm text-saris-text mb-3">🕐 آخر النشاطات</h3>
+          <div className="space-y-2">
+            {recentSessions.slice(0, 3).map((s) => (
+              <div key={s.id} className="flex items-center justify-between bg-saris-bg rounded-saris-sm px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2 h-2 rounded-full ${s.passed ? "bg-saris-success" : "bg-saris-danger"}`} />
+                  <span className="font-tajawal text-xs text-saris-text truncate max-w-[180px]">{s.examName}</span>
+                </div>
+                <span className={`font-inter text-xs font-bold ${s.passed ? "text-saris-success" : "text-saris-danger"}`}>{s.score}%</span>
               </div>
-              <span className={`font-inter text-xs font-bold ${s.passed ? "text-saris-success" : "text-saris-danger"}`}>{s.score}%</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </motion.div>
   );
 };

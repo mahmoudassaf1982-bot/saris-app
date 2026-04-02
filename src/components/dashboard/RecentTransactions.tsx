@@ -1,10 +1,35 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpCircle, ArrowDownCircle } from "lucide-react";
-import { mockTransactions } from "@/data/mock-data";
+import { ArrowUpCircle, ArrowDownCircle, Wallet } from "lucide-react";
+import { useTransactions } from "@/hooks/useTransactions";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const RecentTransactions = () => {
   const navigate = useNavigate();
+  const { transactions, loading } = useTransactions();
+
+  if (loading) {
+    return (
+      <div className="mt-4 bg-saris-bg-card rounded-saris-lg p-4 border border-saris-border shadow-card space-y-3">
+        <Skeleton className="h-5 w-32" />
+        {[0, 1, 2].map((i) => <Skeleton key={i} className="h-8 w-full" />)}
+      </div>
+    );
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.5 }}
+        className="mt-4 bg-saris-bg-card rounded-saris-lg p-4 border border-saris-border shadow-card text-center"
+      >
+        <Wallet className="w-8 h-8 text-saris-text-3 mx-auto mb-2" />
+        <p className="font-tajawal text-sm text-saris-text-2">لا توجد معاملات بعد</p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -23,7 +48,7 @@ const RecentTransactions = () => {
         </button>
       </div>
       <div className="space-y-2">
-        {mockTransactions.map((tx) => (
+        {transactions.slice(0, 5).map((tx) => (
           <div
             key={tx.id}
             className="flex items-center gap-3 py-2 border-b border-saris-border last:border-0"
@@ -35,7 +60,7 @@ const RecentTransactions = () => {
             )}
             <div className="flex-1 min-w-0">
               <p className="font-tajawal text-sm text-saris-text">{tx.reason}</p>
-              <p className="font-inter text-[11px] text-saris-text-3">{tx.date}</p>
+              <p className="font-inter text-[11px] text-saris-text-3">{tx.date ? new Date(tx.date).toLocaleDateString("ar") : ""}</p>
             </div>
             <span
               className={`font-inter text-sm font-bold shrink-0 ${

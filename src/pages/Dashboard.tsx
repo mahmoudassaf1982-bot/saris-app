@@ -1,4 +1,4 @@
-import { mockUser } from "@/data/mock-data";
+import { useAuth } from "@/contexts/AuthContext";
 import SmartInsightHeader from "@/components/dashboard/SmartInsightHeader";
 import WelcomeSection from "@/components/dashboard/WelcomeSection";
 import DiamondBanner from "@/components/dashboard/DiamondBanner";
@@ -14,11 +14,13 @@ import QuickActionCards from "@/components/dashboard/QuickActionCards";
 import { ExternalLink } from "lucide-react";
 
 const Dashboard = () => {
+  const { profile } = useAuth();
+
   return (
     <div className="space-y-0">
       <SmartInsightHeader />
       <WelcomeSection />
-      {!mockUser.isDiamond && <DiamondBanner />}
+      {!profile?.is_diamond && <DiamondBanner />}
       <StatsGrid />
       <ProgressJourney />
       <QuickAIActions />
@@ -27,7 +29,7 @@ const Dashboard = () => {
       <RecommendedTraining />
       <RecentResults />
       <RecentTransactions />
-      {mockUser.isAdmin && (
+      {profile?.is_admin && (
         <div className="mt-4 px-1">
           <a
             href="https://platform.saris.cloud/app/admin"

@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { TrendingUp, AlertTriangle, Sparkles } from "lucide-react";
-import { mockRecentSessions, mockDNA } from "@/data/mock-data";
+import { useLearningDNA } from "@/hooks/useLearningDNA";
+import { useUserStats } from "@/hooks/useUserStats";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type InsightTone = "success" | "warning" | "info";
 
@@ -37,12 +39,12 @@ const toneIcons = {
 };
 
 function getInsight(
-  sessions: typeof mockRecentSessions,
+  hasSessions: boolean,
   dnaType: string,
   trend: string,
   avgScore: number
 ): InsightResult {
-  if (!sessions || sessions.length === 0) {
+  if (!hasSessions) {
     return { message: "🚀 أكمل أول اختبار لتحصل على تحليل ذكي لأسلوب تعلمك!", tone: "info" };
   }
 
@@ -77,12 +79,18 @@ function getInsight(
 }
 
 const SmartInsightHeader = () => {
-  // Mock: use existing mock data to derive insight
+  const { dna, loading: dnaLoading } = useLearningDNA();
+  const { stats, recentSessions, loading: statsLoading } = useUserStats();
+
+  if (dnaLoading || statsLoading) {
+    return <Skeleton className="h-20 w-full rounded-saris-lg" />;
+  }
+
   const insight = getInsight(
-    mockRecentSessions,
-    mockDNA.type,
-    mockDNA.trend,
-    67 // mockStats.averageScore
+    recentSessions.length > 0,
+    dna?.type ?? "unknown",
+    dna?.trend ?? "stable",
+    stats?.averageScore ?? 0
   );
 
   const style = toneStyles[insight.tone];
