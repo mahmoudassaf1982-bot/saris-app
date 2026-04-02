@@ -22,7 +22,7 @@ const Referral = () => {
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`navigator.clipboard.writeText(`https://saris.cloud/ref/${mockUser.referralCode}`);
+    navigator.clipboard.writeText(`https://saris.cloud/ref/${mockUser.referralCode}`);.clipboard.writeText(`https://saris.cloud/ref/${mockUser.referralCode}`);
     toast({ title: "تم النسخ!", description: "تم نسخ رابط الدعوة" });
   };
 
