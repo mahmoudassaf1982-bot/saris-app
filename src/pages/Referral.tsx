@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 const Referral = () => {
   const { toast } = useToast();
 
-  const shareMessage = `جرّب منصة سارس للاختبارات! استخدم كود الدعوة ${mockUser.referralCode} واحصل على نقاط مجانية 🎁\nhttps://sarisexams.com/ref/${mockUser.referralCode}`;
+  const shareMessage = `جرّب منصة سارس للاختبارات! استخدم كود الدعوة ${mockUser.referralCode} واحصل على نقاط مجانية 🎁\nhttps://saris.cloud/ref/${mockUser.referralCode}`;
 
   const copyCode = () => {
     navigator.clipboard.writeText(mockUser.referralCode);
@@ -18,11 +18,11 @@ const Referral = () => {
   };
 
   const shareTelegram = () => {
-    window.open(`https://t.me/share/url?url=${encodeURIComponent("https://sarisexams.com/ref/" + mockUser.referralCode)}&text=${encodeURIComponent(shareMessage)}`, "_blank");
+    window.open(`https://t.me/share/url?url=${encodeURIComponent("https://saris.cloud/ref/" + mockUser.referralCode)}&text=${encodeURIComponent(shareMessage)}`, "_blank");
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(`https://sarisexams.com/ref/${mockUser.referralCode}`);
+    navigator.clipboard.writeText(`https://saris.cloud/ref/${mockUser.referralCode}`);
     toast({ title: "تم النسخ!", description: "تم نسخ رابط الدعوة" });
   };
 
