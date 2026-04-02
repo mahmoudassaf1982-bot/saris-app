@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, CheckCircle, Loader2, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 const ALLOWED_DOMAINS = [
   "gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "icloud.com",
@@ -83,11 +84,24 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleAuth = () => {
-    if (isLogin) {
-      navigate("/app");
+  const handleGoogleAuth = async () => {
+    const hostname = window.location.hostname;
+    const isLovableDomain = hostname.includes('lovable.app') || hostname.includes('lovableproject.com') || hostname === 'localhost';
+
+    if (!isLovableDomain) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: { prompt: 'select_account' },
+        },
+      });
+      if (error) {
+        toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      }
     } else {
-      navigate("/choose-country");
+      // Lovable preview — mock navigation for development
+      navigate("/app");
     }
   };
 
