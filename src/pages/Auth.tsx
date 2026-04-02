@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus, CheckCircle, Loader2, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 const ALLOWED_DOMAINS = [
   "gmail.com", "outlook.com", "hotmail.com", "yahoo.com", "icloud.com",
