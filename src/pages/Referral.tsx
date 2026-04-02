@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 const Referral = () => {
   const { toast } = useToast();
 
-  const shareMessage = `جرّب منصة سارس للاختبارات! استخدم كود الدعوة ${mockUser.referralCode} واحصل على نقاط مجانية 🎁\nhttps://sarisexams.com/ref/${mockUser.referralCode}`;
+  const shareMessage = `جرّب منصة سارس للاختبارات! استخدم كود الدعوة ${mockUser.referralCode} واحصل على نقاط مجانية 🎁\nconst shareMessage = `جرّب منصة سارس للاختبارات! استخدم كود الدعوة ${mockUser.referralCode} واحصل على نقاط مجانية 🎁\nhttps://saris.cloud/ref/${mockUser.referralCode}`;
 
   const copyCode = () => {
     navigator.clipboard.writeText(mockUser.referralCode);
