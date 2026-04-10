@@ -23,6 +23,8 @@ import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
 import AdaptiveTraining from "./pages/AdaptiveTraining";
 import ExamSession from "./pages/ExamSession";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
 
 const queryClient = new QueryClient();
 
