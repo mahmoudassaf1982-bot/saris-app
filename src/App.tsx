@@ -23,6 +23,8 @@ import AppLayout from "./components/layout/AppLayout";
 import NotFound from "./pages/NotFound";
 import AdaptiveTraining from "./pages/AdaptiveTraining";
 import ExamSession from "./pages/ExamSession";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +58,10 @@ const App = () => (
                 <Route path="adaptive-training/:sessionId" element={<AdaptiveTraining />} />
                 <Route path="exam-session/:sessionId" element={<ExamSession />} />
               </Route>
+
+              {/* Payment callback routes */}
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/cancel" element={<PaymentCancel />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
