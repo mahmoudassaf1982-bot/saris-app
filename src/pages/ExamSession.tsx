@@ -229,7 +229,7 @@ export default function ExamSession() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6">
         <ClipboardCheck className="h-12 w-12 text-destructive" />
         <h2 className="font-tajawal font-bold text-xl text-foreground">الجلسة غير موجودة</h2>
-        <p className="font-tajawal text-sm text-muted-foreground text-center">بيانات جلسة المحاكاة غير متوفرة. يرجى بدء جلسة جديدة.</p>
+        <p className="font-tajawal text-sm text-muted-foreground text-center">بيانات جلسة الاختبار غير متوفرة. يرجى بدء جلسة جديدة.</p>
         <button onClick={() => navigate('/app/exams')} className="flex items-center gap-2 border border-border rounded-xl px-4 py-2 font-tajawal text-sm text-foreground">
           <Home className="w-4 h-4" /> العودة للاختبارات
         </button>
@@ -253,9 +253,31 @@ export default function ExamSession() {
   // ── SUBMITTING ──
   if (phase === 'submitting') {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
-        <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        <p className="font-tajawal text-sm text-muted-foreground">جارٍ حفظ النتائج وتحديث التحليلات...</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <div className="relative">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <ClipboardCheck className="h-5 w-5 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </div>
+          <div className="text-center space-y-2">
+            <h2 className="font-tajawal font-bold text-lg text-foreground">جاري تحليل إجاباتك وإعداد النتيجة…</h2>
+            <p className="font-tajawal text-sm text-muted-foreground">يقوم النظام بمراجعة إجاباتك وتحليل أدائك في كل قسم</p>
+          </div>
+          <div className="flex gap-1.5 mt-2">
+            {[0, 1, 2].map(i => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 rounded-full bg-primary"
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.3 }}
+              />
+            ))}
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -266,7 +288,7 @@ export default function ExamSession() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6">
         <AlertTriangle className="h-12 w-12 text-saris-warning" />
-        <h2 className="font-tajawal font-bold text-xl text-foreground">هل تريد إنهاء المحاكاة؟</h2>
+        <h2 className="font-tajawal font-bold text-xl text-foreground">هل تريد إنهاء الاختبار؟</h2>
         <div className="text-center space-y-1">
           <p className="font-tajawal text-sm text-muted-foreground">
             أجبت على <span className="font-bold text-foreground">{answeredCount}</span> من <span className="font-bold text-foreground">{questions.length}</span> سؤال
@@ -325,8 +347,8 @@ export default function ExamSession() {
           <div className="flex items-center gap-2">
             <ClipboardCheck className="h-4 w-4 text-primary" />
             <div>
-              <span className="font-tajawal font-bold text-sm text-foreground">محاكاة رسمية</span>
-              <span className="font-tajawal text-xs text-muted-foreground mr-2">اختبار القدرات</span>
+              <span className="font-tajawal font-bold text-sm text-foreground">اختبار SARIS الحقيقي</span>
+              <span className="font-tajawal text-xs text-muted-foreground mr-2">جرب اختبار يحاكي الحقيقي</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
