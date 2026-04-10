@@ -59,6 +59,10 @@ const App = () => (
                 <Route path="exam-session/:sessionId" element={<ExamSession />} />
               </Route>
 
+              {/* Payment callback routes */}
+              <Route path="/payment/success" element={<PaymentSuccess />} />
+              <Route path="/payment/cancel" element={<PaymentCancel />} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
