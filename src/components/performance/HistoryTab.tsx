@@ -73,7 +73,7 @@ const HistoryTab = () => {
                       <span className={`inline-block text-[10px] font-tajawal font-bold px-2 py-0.5 rounded-saris-full mb-1 ${
                         session.type === "simulation" ? "bg-saris-navy/10 text-saris-navy" : "bg-saris-orange/10 text-saris-orange"
                       }`}>
-                        {session.type === "simulation" ? "محاكاة رسمية" : "تدريب ذكي"}
+                        {session.type === "simulation" ? "اختبار حقيقي" : "تدريب ذكي"}
                       </span>
                       <p className="font-tajawal text-sm text-saris-text">{session.examName}</p>
                       <span className="font-inter text-[10px] text-saris-text-3">

@@ -64,7 +64,7 @@ const Exams = () => {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
       <h1 className="font-tajawal font-bold text-[22px] text-saris-text mb-1">الاختبارات المتاحة</h1>
-      <p className="font-tajawal text-[13px] text-saris-text-2 mb-4">اختر اختبارًا لبدء التدريب أو المحاكاة</p>
+      <p className="font-tajawal text-[13px] text-saris-text-2 mb-4">اختر اختبارًا لبدء التدريب أو الاختبار الحقيقي</p>
 
       {/* Country filter */}
       <div className="inline-flex items-center gap-1.5 bg-saris-bg-card rounded-saris-full px-3 py-1.5 border border-saris-border mb-5">
@@ -147,10 +147,10 @@ const Exams = () => {
                     <button
                       onClick={() => openModal(exam, "simulation")}
                       className="flex-1 flex items-center justify-center gap-1.5 gradient-primary text-white font-tajawal font-bold text-sm rounded-saris-md h-10"
-                      aria-label="بدء محاكاة رسمية"
+                      aria-label="بدء اختبار SARIS الحقيقي"
                     >
                       <ClipboardCheck className="w-4 h-4" />
-                      محاكاة رسمية
+                      اختبار حقيقي
                     </button>
                   </div>
 
@@ -187,7 +187,7 @@ const Exams = () => {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-tajawal font-bold text-lg text-saris-text">
-                  {modalType === "smart_training" ? "بدء جلسة تدريب ذكي" : "بدء جلسة محاكاة رسمية"}
+                  {modalType === "smart_training" ? "بدء جلسة تدريب ذكي" : "بدء اختبار SARIS الحقيقي"}
                 </h3>
                 <button onClick={() => setModalExam(null)} className="w-8 h-8 rounded-full bg-saris-bg flex items-center justify-center" aria-label="إغلاق">
                   <X className="w-4 h-4 text-saris-text-2" />
@@ -232,10 +232,16 @@ const Exams = () => {
                 </div>
               ) : (
                 <div className="space-y-2 mb-5">
+                <div className="flex items-start gap-2 bg-saris-info/5 rounded-saris-md px-3 py-2.5 mb-1">
+                    <ClipboardCheck className="w-4 h-4 text-saris-info flex-shrink-0 mt-0.5" />
+                    <span className="font-tajawal text-xs text-saris-text leading-relaxed">
+                      جرب اختبار كامل يحاكي الاختبار الحقيقي في المستوى وطبيعة الأسئلة
+                    </span>
+                  </div>
                   <div className="flex items-start gap-2 bg-saris-warning/10 rounded-saris-md px-3 py-2.5">
                     <AlertTriangle className="w-4 h-4 text-saris-warning flex-shrink-0 mt-0.5" />
                     <span className="font-tajawal text-xs text-saris-text leading-relaxed">
-                      المحاكاة تحاكي ظروف الاختبار الحقيقي: مؤقت تنازلي، لا مدرب ذكي، لا تلميحات (إلا للأسئلة الصعبة)
+                      مؤقت تنازلي، لا مدرب ذكي، لا تلميحات (إلا للأسئلة الصعبة)
                     </span>
                   </div>
                   <div className="flex items-center gap-2 bg-saris-info/5 rounded-saris-md px-3 py-2">
@@ -263,7 +269,7 @@ const Exams = () => {
                   modalType === "smart_training" ? "bg-saris-orange text-white" : "gradient-primary text-white"
                 }`}
               >
-                {modalType === "smart_training" ? "ابدأ التدريب" : "ابدأ المحاكاة"}
+                {modalType === "smart_training" ? "ابدأ التدريب" : "ابدأ الاختبار"}
               </button>
 
               {canAfford && !isDiamond && (
