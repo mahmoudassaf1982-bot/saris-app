@@ -26,6 +26,7 @@ import ExamSession from "./pages/ExamSession";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
 import Settings from "./pages/Settings";
+import VerifyEmail from "./pages/VerifyEmail";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/choose-country" element={<ChooseCountry />} />
               <Route path="/complete-profile" element={<CompleteProfile />} />
               <Route path="/welcome" element={<Welcome />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
 
               {/* Student app — protected */}
               <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>

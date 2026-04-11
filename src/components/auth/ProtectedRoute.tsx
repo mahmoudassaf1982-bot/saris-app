@@ -17,5 +17,14 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     return <Navigate to="/auth" replace />;
   }
 
+  // Google OAuth users have email_confirmed_at set automatically.
+  // Email/password users must verify their email first.
+  const isOAuth = user.app_metadata?.provider !== "email";
+  const isEmailVerified = !!user.email_confirmed_at;
+
+  if (!isOAuth && !isEmailVerified) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   return <>{children}</>;
 }
