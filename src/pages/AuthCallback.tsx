@@ -7,11 +7,32 @@ export default function AuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") {
-        navigate("/app", { replace: true });
+    // Handle hash fragments from email verification links
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get("type");
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        if (session?.user?.email_confirmed_at) {
+          // Email is verified, proceed to app
+          navigate("/app", { replace: true });
+        } else if (type === "signup" || type === "email") {
+          // Just verified, refresh session to get updated user
+          supabase.auth.refreshSession().then(({ data }) => {
+            if (data.session?.user?.email_confirmed_at) {
+              navigate("/app", { replace: true });
+            } else {
+              navigate("/verify-email", { replace: true });
+            }
+          });
+        } else {
+          navigate("/app", { replace: true });
+        }
       }
     });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   return (

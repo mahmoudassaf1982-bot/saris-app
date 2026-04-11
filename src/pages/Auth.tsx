@@ -115,7 +115,6 @@ const Auth = () => {
           return;
         }
         setShowSuccess(true);
-        setTimeout(() => navigate("/choose-country"), 2000);
       }
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message ?? "حدث خطأ غير متوقع", variant: "destructive" });
@@ -145,12 +144,25 @@ const Auth = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="max-w-md w-full bg-saris-bg-card rounded-2xl p-8 shadow-card text-center"
         >
-          <div className="w-16 h-16 rounded-full bg-saris-success/10 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-saris-success" />
+          <div className="w-16 h-16 rounded-full bg-saris-navy/10 flex items-center justify-center mx-auto mb-4">
+            <Mail className="w-8 h-8 text-saris-navy" />
           </div>
-          <h2 className="font-tajawal font-bold text-xl text-saris-text mb-2">تم إنشاء حسابك بنجاح! 🎉</h2>
-          <p className="font-tajawal text-sm text-saris-text-2 mb-6">جاري تحويلك لاختيار بلدك...</p>
-          <Loader2 className="w-5 h-5 text-saris-navy animate-spin mx-auto" />
+          <h2 className="font-tajawal font-bold text-xl text-saris-text mb-2">تحقق من بريدك الإلكتروني ✉️</h2>
+          <p className="font-tajawal text-sm text-saris-text-2 mb-2">
+            لقد أرسلنا رسالة تأكيد إلى:
+          </p>
+          <p className="font-inter text-sm font-semibold text-saris-navy mb-4" dir="ltr">{email}</p>
+          <p className="font-tajawal text-sm text-saris-text-3 leading-relaxed mb-6">
+            افتح بريدك الإلكتروني واضغط على رابط التأكيد لتفعيل حسابك.
+            <br />
+            تحقق أيضاً من مجلد البريد المزعج (Spam).
+          </p>
+          <button
+            onClick={() => { setShowSuccess(false); setIsLogin(true); }}
+            className="w-full gradient-primary text-white font-tajawal font-bold text-sm rounded-xl py-3 shadow-card"
+          >
+            العودة لتسجيل الدخول
+          </button>
         </motion.div>
       </div>
     );
