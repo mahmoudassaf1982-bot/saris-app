@@ -14,7 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      diamond_plans: {
+        Row: {
+          country_id: string
+          created_at: string
+          duration_months: number
+          id: string
+          is_active: boolean
+          name_ar: string
+          price_usd: number
+        }
+        Insert: {
+          country_id: string
+          created_at?: string
+          duration_months?: number
+          id?: string
+          is_active?: boolean
+          name_ar: string
+          price_usd: number
+        }
+        Update: {
+          country_id?: string
+          created_at?: string
+          duration_months?: number
+          id?: string
+          is_active?: boolean
+          name_ar?: string
+          price_usd?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
