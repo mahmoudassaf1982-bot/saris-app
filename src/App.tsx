@@ -25,6 +25,7 @@ import AdaptiveTraining from "./pages/AdaptiveTraining";
 import ExamSession from "./pages/ExamSession";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="topup" element={<TopUp />} />
                 <Route path="history" element={<History />} />
                 <Route path="referral" element={<Referral />} />
+                <Route path="settings" element={<Settings />} />
                 <Route path="adaptive-training/:sessionId" element={<AdaptiveTraining />} />
                 <Route path="exam-session/:sessionId" element={<ExamSession />} />
               </Route>

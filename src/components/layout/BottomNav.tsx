@@ -1,4 +1,4 @@
-import { Home, BookOpen, BarChart3, Coins } from "lucide-react";
+import { Home, BookOpen, BarChart3, Coins, Settings } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const tabs = [
@@ -6,6 +6,7 @@ const tabs = [
   { label: "اختبارات", icon: BookOpen, path: "/app/exams" },
   { label: "أدائي", icon: BarChart3, path: "/app/performance" },
   { label: "المحفظة", icon: Coins, path: "/app/wallet" },
+  { label: "الإعدادات", icon: Settings, path: "/app/settings" },
 ];
 
 const BottomNav = () => {
