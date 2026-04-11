@@ -25,6 +25,7 @@ import AdaptiveTraining from "./pages/AdaptiveTraining";
 import ExamSession from "./pages/ExamSession";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
