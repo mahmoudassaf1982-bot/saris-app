@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User, Mail, Phone, MapPin, Crown, Coins, ChevronLeft } from "lucide-react";
+import { LogOut, User, Mail, MapPin, Crown, Coins } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Settings = () => {
@@ -15,7 +15,6 @@ const Settings = () => {
   const infoRows = [
     { icon: User, label: "الاسم", value: `${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`.trim() || "—" },
     { icon: Mail, label: "البريد الإلكتروني", value: profile?.email ?? "—" },
-    { icon: Phone, label: "رقم الهاتف", value: profile?.phone ?? "—" },
     { icon: MapPin, label: "الدولة", value: profile?.country_name ?? "—" },
     { icon: Coins, label: "الرصيد", value: `${profile?.balance ?? 0} نقطة` },
     { icon: Crown, label: "الاشتراك", value: profile?.is_diamond ? "Diamond 💎" : "مجاني" },
@@ -64,7 +63,7 @@ const Settings = () => {
       {/* Sign Out */}
       <button
         onClick={handleSignOut}
-        className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 font-tajawal font-bold text-sm rounded-saris-lg py-3 transition-colors border border-red-200"
+        className="w-full flex items-center justify-center gap-2 bg-destructive/10 hover:bg-destructive/20 text-destructive font-tajawal font-bold text-sm rounded-saris-lg py-3 transition-colors border border-destructive/20"
       >
         <LogOut className="w-4 h-4" />
         تسجيل الخروج
